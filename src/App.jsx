@@ -10,6 +10,8 @@ import CreateCampaignPage from './components/CreateCampaignPage';
 import UpdateCampaignPage from './components/UpdateCampaignPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import ProfileSetupStep1Page from './components/ProfileSetupStep1Page';
+import UserProfilePage from './components/UserProfilePage';
+import EditUserProfilePage from './components/EditUserProfilePage';
 function App() {
   return (
     <div>
@@ -42,7 +44,18 @@ function App() {
           <Route path="/setup-profile/step1" element={
             <ProtectedRoute><ProfileSetupStep1Page /></ProtectedRoute>
           } />
+          <Route path="/profile" element={
+            <ProtectedRoute><UserProfilePage /></ProtectedRoute>
+          } />
+
+          <Route path="/profile/edit" element={
+            <ProtectedRoute><EditUserProfilePage /></ProtectedRoute>
+          } />
+
+
+          {/* ======================================================================== */}
         </Routes>
+
 
       </div>
     </div>

@@ -10,6 +10,8 @@ function ProfileSetupStep1Page() {
 
     const [bio, setBio] = useState('');
     const [location, setLocation] = useState('');
+    const [date_of_birth, setDateOfBirth] = useState('');
+
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
 
@@ -18,6 +20,7 @@ function ProfileSetupStep1Page() {
         if (user && user.user_profile) {
             setBio(user.user_profile.bio || '');
             setLocation(user.user_profile.location || '');
+            setDateOfBirth(user.user_profile.date_of_birth || '');
         }
     }, [user]); // Re-run if user object changes in context
 
@@ -26,7 +29,7 @@ function ProfileSetupStep1Page() {
         setError(null);
         setLoading(true);
 
-        const profileData = { bio, location };
+        const profileData = { bio, location, date_of_birth };
 
         try {
             const response = await updateMyProfile(profileData);
@@ -87,6 +90,12 @@ function ProfileSetupStep1Page() {
                         <input id="location" name="location" type="text"
                             className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                             placeholder="e.g., Kathmandu, Nepal" value={location} onChange={(e) => setLocation(e.target.value)} />
+                    </div>
+                    <div>
+                        <label htmlFor="dob" className="block text-sm font-medium text-gray-700">Date of Birth</label>
+                        <input id="dob" name="dob" type="date"
+                            className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                            value={date_of_birth} onChange={(e) => setDateOfBirth(e.target.value)} />
                     </div>
 
                     <div className="flex items-center justify-between space-x-4">

@@ -71,7 +71,20 @@ export const AuthProvider = ({ children }) => {
         navigate('/login');
     };
 
-    const value = { user, token, isLoading, login, register, logout };
+    const updateUserProfileLocally = (updatedProfileData) => {
+        setUser(prevUser => {
+            if (!prevUser) return null; // Should not happen if user is logged in
+            return {
+                ...prevUser,
+                user_profile: { // Assuming user_profile is always an object on prevUser
+                    ...(prevUser.user_profile || {}), // Merge with existing profile fields
+                    ...updatedProfileData // Apply updates
+                }
+            };
+        });
+    };
+
+    const value = { user, token, isLoading, login, register, logout, updateUserProfileLocally };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

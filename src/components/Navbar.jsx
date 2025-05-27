@@ -52,7 +52,9 @@ function Navbar() {
                         {user ? (
                             <>
                                 <span className="text-sm text-indigo-100">
-                                    Welcome, <strong className="font-medium text-white">{user.full_name}!</strong>
+                                    <Link to="/profile" className="text-sm text-white hover:text-gray-300">
+                                        Welcome, {user.full_name}!
+                                    </Link>
                                 </span>
                                 <button
                                     onClick={logout}
