@@ -71,7 +71,20 @@ export const updateCampaignById = (id, campaignData) => {
 export const makeDonation = (campaignId, donationData) => {
     return apiClient.post(`/campaigns/${campaignId}/donations`, { donation: donationData });
 }
-export const updateMyProfile = (profileData) => {
-    // Requires authentication, token added by interceptor
-    return apiClient.put('/profile', { user_profile: profileData });
+export const updateMyProfile = (profileDataWithFile) => {
+    const formData = new FormData();
+
+    if (profileDataWithFile.bio !== undefined) formData.append('user_profile[bio]', profileDataWithFile.bio);
+    if (profileDataWithFile.location !== undefined) formData.append('user_profile[location]', profileDataWithFile.location);
+    if (profileDataWithFile.website_url !== undefined) formData.append('user_profile[website_url]', profileDataWithFile.website_url);
+    if (profileDataWithFile.date_of_birth !== undefined) formData.append('user_profile[date_of_birth]', profileDataWithFile.date_of_birth);
+    if (profileDataWithFile.profile_image) {
+        formData.append('user_profile[profile_image]', profileDataWithFile.profile_image);
+    }
+
+    return apiClient.put('/profile', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        }
+    });
 };
