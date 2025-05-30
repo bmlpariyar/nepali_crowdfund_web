@@ -53,7 +53,7 @@ function Navbar() {
                             <>
                                 <span className="text-sm text-indigo-100">
                                     <Link to="/profile" className="text-sm text-white hover:text-gray-300">
-                                        Welcome, {user.full_name}!
+                                        <img src={user.user_profile.profile_picture_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.full_name || 'User') + '&size=128&background=6366f1&color=ffffff'} className='w-10 h-10 bg-white rounded-full border-white' alt="" />
                                     </Link>
                                 </span>
                                 <button

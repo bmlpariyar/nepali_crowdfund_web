@@ -71,6 +71,41 @@ export const AuthProvider = ({ children }) => {
         navigate('/login');
     };
 
+    // Add refreshUser function to fetch latest user data
+    const refreshUser = useCallback(async () => {
+        const storedToken = localStorage.getItem('jwtToken');
+        if (!storedToken) {
+            setUser(null);
+            return;
+        }
+
+        try {
+            const response = await fetchUserProfile();
+            setUser(response.data.user);
+        } catch (error) {
+            console.error("Failed to refresh user profile:", error);
+            // Don't remove token on refresh failure, just log the error
+            // Only remove token if it's actually invalid (401/403)
+            if (error.response?.status === 401 || error.response?.status === 403) {
+                localStorage.removeItem('jwtToken');
+                setToken(null);
+                setUser(null);
+            }
+        }
+    }, []);
+
+    // Add function to force refresh user data (useful after profile updates)
+    const forceRefreshUser = async () => {
+        try {
+            setIsLoading(true);
+            await refreshUser();
+        } catch (error) {
+            console.error("Force refresh failed:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const updateUserProfileLocally = (updatedProfileData) => {
         setUser(prevUser => {
             if (!prevUser) return null; // Should not happen if user is logged in
@@ -84,7 +119,7 @@ export const AuthProvider = ({ children }) => {
         });
     };
 
-    const value = { user, token, isLoading, login, register, logout, updateUserProfileLocally };
+    const value = { user, token, isLoading, login, register, logout, updateUserProfileLocally, refreshUser, forceRefreshUser };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

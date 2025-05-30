@@ -32,7 +32,7 @@ function EditUserProfilePage() {
             setLocation(profile.location || '');
             setWebsiteUrl(profile.website_url || '');
             setDateOfBirth(profile.date_of_birth || '');
-            setProfileImagePreview(profile.profile_image_url || ''); // Use the URL from backend for initial preview
+            setProfileImagePreview(profile.profile_picture_url || '');
         }
     }, [user]);
 
@@ -59,12 +59,27 @@ function EditUserProfilePage() {
             ...(profileImageFile && { profile_image: profileImageFile }),
         };
         try {
-            const response = await updateMyProfile(profileDataForApi); // This now sends FormData
+            const response = await updateMyProfile(profileDataForApi);
+            updateUserProfileLocally(response.data.user_profile);// This now sends FormData
             updateUserProfileLocally(response.data.user_profile);
             setSuccess('Profile updated successfully!');
+
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
+
+            setTimeout(async () => {
+                try {
+                    await forceRefreshUser();
+                    // Dispatch custom event for other components listening (like UserProfilePage)
+                    window.dispatchEvent(new CustomEvent('profileUpdated'));
+                } catch (refreshError) {
+                    console.error('Failed to refresh user data:', refreshError);
+                }
+            }, 100);
             setProfileImageFile(null); // Clear the file input state after successful upload
             // The preview will be updated by the effect listening to user context change
-            setTimeout(() => navigate('/profile'), 1500);
+            setTimeout(() => navigate('/profile'), 100);
         } catch (err) {
             console.error("Profile update error:", err.response || err);
             if (err.response && err.response.data && err.response.data.errors) {
@@ -112,12 +127,6 @@ function EditUserProfilePage() {
                          hover:file:bg-indigo-100"
                             ref={fileInputRef}
                         />
-                        {/* To clear the file input visually if needed (though clearing profileImageFile state is key)
-            <button type="button" onClick={() => { setProfileImageFile(null); setProfileImagePreview(user?.user_profile?.profile_image_url || ''); if(fileInputRef.current) fileInputRef.current.value = null; }}
-              className="text-xs text-red-500 hover:text-red-700">
-              Clear selection
-            </button>
-            */}
                     </div>
 
 
@@ -128,7 +137,7 @@ function EditUserProfilePage() {
                             placeholder="Tell us about yourself..." value={bio} onChange={(e) => setBio(e.target.value)} />
                     </div>
 
-                    {/* ... other form fields (location, websiteUrl, dateOfBirth) remain the same as before ... */}
+
                     <div>
                         <label htmlFor="location" className="block text-sm font-medium text-gray-700">Location</label>
                         <input id="location" name="location" type="text"
