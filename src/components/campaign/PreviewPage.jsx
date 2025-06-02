@@ -39,9 +39,15 @@ const PreviewPage = () => {
         <strong>Category ID:</strong> {campaignData.category_id}
       </p>
       <img
-        src={campaignData.image_url}
-        alt="Cover"
-        className="w-full h-64 object-cover mb-4"
+        src={
+          typeof campaignData.cover_image === "string"
+            ? campaignData.cover_image
+            : campaignData.cover_image
+              ? URL.createObjectURL(campaignData.cover_image)
+              : ""
+        }
+        alt="Campaign Cover"
+        className="w-full h-64 object-cover rounded-lg border border-gray-300 mb-4"
       />
       <p>
         <strong>Video URL:</strong> {campaignData.video_url}

@@ -30,6 +30,18 @@ export const AuthProvider = ({ children }) => {
         checkUserStatus();
     }, [checkUserStatus]);
 
+    useEffect(() => {
+        const token = localStorage.getItem('authToken');
+        const userData = localStorage.getItem('userData');
+
+        if (token && userData) {
+            // Verify token is still valid by making an API call
+            verifyTokenAndSetUser(token, JSON.parse(userData));
+        } else {
+            setIsLoading(false); // Important: stop loading if no stored auth
+        }
+    }, []);
+
     const login = async (credentials) => {
         try {
             setIsLoading(true);

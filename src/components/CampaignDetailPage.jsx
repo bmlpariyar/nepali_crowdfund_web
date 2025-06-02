@@ -4,6 +4,11 @@ import { useParams, Link } from 'react-router-dom';
 import { fetchCampaignById, makeDonation } from '../services/apiService';
 import { useAuth } from '../context/AuthContext';
 import { deleteCampaignById } from '../services/apiService';
+import DonationModal from './donation/DonationModal';
+import SupportMessages from './donation/SupportMessages';
+import UpdateMessageModal from './campaign/UpdateMessageModal';
+import CampaignStatusUpdate from './CampaignStatusUpdate';
+import RecentDonations from './donation/RecentDonations';
 
 const calculateProgress = (current, goal) => {
     if (!goal || goal <= 0 || !current || current <= 0) {
@@ -14,17 +19,19 @@ const calculateProgress = (current, goal) => {
 
 
 function CampaignDetailPage() {
-    const { user } = useAuth();
+    const { user, isLoading: authLoading } = useAuth();
     const { id: campaignId } = useParams();
     const [campaign, setCampaign] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [deleteError, setDeleteError] = useState(null);
-    const [donationAmount, setDonationAmount] = useState('');
-    const [donationError, setDonationError] = useState(null);
-    const [donationSuccess, setDonationSuccess] = useState(null);
-    const [isDonating, setIsDonating] = useState(false);
+    const [isModalOpen, setModalOpen] = useState(false);
+    const [isUpdateModalOpen, setUpdateModalOpen] = useState(false);
+    const [messageRefreshKey, setMessageRefreshKey] = useState(0);
 
+    const handleDonationSuccess = () => {
+        setMessageRefreshKey(prev => prev + 1); // triggers SupportMessages to refresh
+    };
 
     useEffect(() => {
         if (!campaignId) {
@@ -65,73 +72,7 @@ function CampaignDetailPage() {
         loadCampaign();
     }, [campaignId]);
 
-    const handleDonationSubmit = async (event) => {
-        event.preventDefault();
-        if (!user) {
-            setDonationError("Please log in to make a donation.");
-            return;
-        }
-        if (!donationAmount || parseFloat(donationAmount) <= 0) {
-            setDonationError("Please enter a valid donation amount.");
-            return;
-        }
 
-        setIsDonating(true);
-        setDonationError(null);
-        setDonationSuccess(null);
-
-        try {
-            const donationData = { amount: parseFloat(donationAmount) };
-            const response = await makeDonation(campaignId, donationData);
-            setDonationSuccess(`Thank you for your donation of NPR ${response.data.donation.amount}!`);
-
-            // Update campaign details properly after successful donation
-            if (campaign) {
-                let newAmount;
-                const donatedValue = parseFloat(response.data.donation?.amount); // Get donated amount first
-
-                if (typeof response.data.campaign_current_amount === 'number') {
-                    newAmount = response.data.campaign_current_amount;
-                } else if (typeof response.data.campaign_current_amount === 'string') {
-                    newAmount = parseFloat(response.data.campaign_current_amount);
-                } else if (response.data.campaign?.current_amount) {
-                    newAmount = parseFloat(response.data.campaign.current_amount);
-                } else if (!isNaN(donatedValue)) {
-                    // --- MODIFIED ---
-                    // Calculate manually: Use current amount (or 0) + donated amount
-                    const current = parseFloat(campaign.current_amount) || 0;
-                    newAmount = current + donatedValue;
-                    // --- END MODIFIED ---
-                }
-
-
-                // Make sure we have a valid number before updating state
-                // Use isFinite to avoid Infinity/NaN and check if it's a number
-                if (typeof newAmount === 'number' && isFinite(newAmount)) {
-                    setCampaign(prevCampaign => ({
-                        ...prevCampaign,
-                        current_amount: newAmount
-                    }));
-                } else {
-                    // Log the response if calculation fails, helps debugging
-                    console.error("Failed to calculate new amount. Response:", response.data);
-                }
-            }
-
-            setDonationAmount(''); // Clear input field
-        } catch (err) {
-            console.error("Donation failed:", err.response);
-            if (err.response && err.response.data && err.response.data.errors) {
-                setDonationError(err.response.data.errors.join(', '));
-            } else if (err.response && err.response.data && err.response.data.error) {
-                setDonationError(err.response.data.error);
-            } else {
-                setDonationError("Donation failed. Please try again.");
-            }
-        } finally {
-            setIsDonating(false);
-        }
-    };
 
 
     const handleDelete = async () => {
@@ -181,6 +122,10 @@ function CampaignDetailPage() {
         );
     }
 
+    if (authLoading) {
+        return <div>Checking authentication...</div>;
+    }
+
     // --- Campaign Not Found / Empty Data State ---
     // This handles cases where loading finished, no specific error string was set, but campaign is still null/undefined
     if (!campaign) {
@@ -205,7 +150,7 @@ function CampaignDetailPage() {
     const deadlineDate = campaign.deadline ? new Date(campaign.deadline).toLocaleDateString() : 'N/A';
 
     return (
-        <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className=" bg-white container mx-auto px-4 py-8 max-w-7xl">
             {/* Optional: Back Link */}
             <Link
                 to="/campaigns"
@@ -214,152 +159,233 @@ function CampaignDetailPage() {
                 &larr; Back to All Campaigns
             </Link>
 
-            {/* --- Header Section --- */}
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-3">
-                {campaign.title || 'Untitled Campaign'}
-            </h2>
-            <p className="text-sm text-gray-600 mb-6 space-x-2">
-                <span>
-                    Category: <strong className="font-medium text-gray-800">{campaign.category?.name ?? 'N/A'}</strong>
-                </span>
-                <span>|</span>
-                <span>
-                    By: <strong className="font-medium text-gray-800">{campaign.user?.full_name ?? 'Unknown'}</strong>
-                </span>
-                <span>|</span>
-                <span>
-                    Deadline: <strong className="font-medium text-gray-800">{deadlineDate}</strong>
-                </span>
-                <span>|</span>
-                <span>
-                    Status: <strong className="font-medium text-gray-800">{campaign.status}</strong>
-                </span>
-            </p>
-            {user?.id === campaign.user?.id && (
-                <div className="mb-6">
-                    <button
-                        onClick={handleDelete}
-                        className="bg-red-500 text-white font-bold py-2 px-6 rounded hover:bg-red-600"
-                    >
-                        Delete Campaign
-                    </button>
-                    {deleteError && (
-                        <p className="text-red-500 text-sm mt-2">{deleteError}</p>
-                    )}
-                </div>
-            )}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2 space-y-8">
+                    <div>
+                        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                            {campaign.title || 'Untitled Campaign'}
+                        </h1>
+                        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-6">
+                            <div className="flex items-center gap-2">
+                                <i className="fas fa-user-circle"></i>
+                                <span>{campaign.user.full_name} is organizing this fundraiser</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <i className="fas fa-calendar"></i>
+                                <span>{campaign.created_at.split('T')[0]}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <i className="fas fa-tag"></i>
+                                <span>Category: <strong>{campaign.category.name}</strong></span>
+                            </div>
+                        </div>
+                        <div className='flex flex-col sm:flex-row sm:items-center justify-between mb-6'>
+                            {/* Trust Badge  */}
+                            <div className="inline-flex items-center gap-2 bg-green-50 text-green-700 px-3 py-1 rounded-full text-sm border border-green-200">
+                                <i className="fas fa-shield-alt"></i>
+                                <span>Donation protected</span>
+                            </div>
+                            <div className='flex items-center gap-4'>
+                                {user?.id === campaign.user?.id && (
+                                    <div className="mb-6">
+                                        <button
+                                            onClick={handleDelete}
+                                            className="bg-red-500 text-white text-xs font-bold py-1 px-2 rounded-full hover:bg-red-600"
+                                        >
+                                            Delete
+                                        </button>
+                                        {deleteError && (
+                                            <p className="text-red-500 text-sm mt-2">{deleteError}</p>
+                                        )}
+                                    </div>
+                                )}
+                                {user?.id === campaign.user?.id && (
+                                    <div className="mb-6">
+                                        <button
+                                            onClick={handleUpdate}
+                                            className="bg-blue-500 text-white text-xs font-bold py-1 px-2 rounded-full hover:bg-blue-600"
+                                        >
+                                            Update
+                                        </button>
+                                    </div>
+                                )}
+                                {user?.id === campaign.user?.id && (
+                                    <div className="mb-6">
+                                        <button
+                                            onClick={() => setUpdateModalOpen(true)}
+                                            className="bg-cyan-500 text-white text-xs font-bold py-1 px-2 rounded-full hover:bg-cyan-600"
+                                        >
+                                            Edit
+                                        </button>
 
-            {user?.id === campaign.user?.id && (
-                <div className="mb-6">
-                    <button
-                        onClick={handleUpdate}
-                        className="bg-blue-500 text-white font-bold py-2 px-6 rounded hover:bg-blue-600"
-                    >
-                        Update Campaign
-                    </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                    </div>
+                    <div className="rounded-lg overflow-hidden shadow-lg">
+                        <img src={campaign.cover_image_url || 'https://via.placeholder.com/600x400'}
+                            alt="Campaign Image"
+                            className="w-full h-80 object-cover" />
+                    </div>
+                    {/* story section */}
+                    <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200">
+                        <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden border border-gray-300">
+                            <div
+                                className="bg-gradient-to-r from-green-400 to-blue-500 h-4 rounded-full flex items-center justify-center"
+                                style={{ width: `${progressPercent}%` }}
+                                role="progressbar"
+                                aria-valuenow={progressPercent}
+                                aria-valuemin="0"
+                                aria-valuemax="100"
+                            >
+                                {/* Optional: Show percentage inside bar if it's wide enough */}
+                                {progressPercent > 5 && (
+                                    <span className="text-xs font-bold text-white text-shadow-sm">
+                                        {Math.round(progressPercent)}%
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                        <h2 className="text-2xl font-semibold text-gray-900 mb-6">Our Story</h2>
+
+                        <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed space-y-4">
+                            <p>{campaign.story}</p>
+                        </div>
+                    </div>
+
+                    {/* update section */}
+                    <CampaignStatusUpdate campaignId={campaign.id} user={user} />
+                    {/* <!-- Comments/Messages Section --> */}
+                    <SupportMessages campaignId={campaign.id}
+                        refreshTrigger={messageRefreshKey} />
+
                 </div>
-            )}
+
+                {/* <!-- Sidebar --> */}
+                <div className="lg:col-span-1">
+                    <div className="sticky top-8 space-y-6">
+
+                        {/* <!-- Progress Card --> */}
+                        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+
+                            {/*  Amount Raised */}
+                            <div className="flex items-center justify-between mb-4">
+                                <div>
+                                    <div className="text-2xl font-bold text-gray-900">
+                                        NRs {campaign.current_amount.toLocaleString()}
+                                    </div>
+                                    <div className="text-sm text-gray-600">
+                                        raised of NRs {campaign.funding_goal.toLocaleString()} goal
+                                    </div>
+                                </div>
+                                <div className="relative w-28 h-28">
+                                    <svg
+                                        className="w-full h-full transform -rotate-90"
+                                        viewBox="0 0 36 36"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                    >
+                                        <circle
+                                            className="text-gray-200"
+                                            stroke="currentColor"
+                                            strokeWidth="4"
+                                            fill="none"
+                                            cx="18"
+                                            cy="18"
+                                            r="16"
+                                        />
+                                        <circle
+                                            className="text-green-500"
+                                            stroke="currentColor"
+                                            strokeWidth="4"
+                                            strokeLinecap="round"
+                                            fill="none"
+                                            cx="18"
+                                            cy="18"
+                                            r="16"
+                                            strokeDasharray="100"
+                                            strokeDashoffset={100 - progressPercent}
+                                        />
+                                    </svg>
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <span className="text-sm font-semibold text-gray-700">
+                                            {Math.round(progressPercent)}%
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* <!-- Donation Stats --> */}
+                            <div className="text-sm text-gray-600 mb-6">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <i className="fas fa-chart-line text-purple-500"></i>
+                                    <span><strong className="text-purple-600">{campaign.total_donations} people</strong> have donated</span>
+                                </div>
+                            </div>
+
+                            {/* <!-- Action Buttons --> */}
+                            <div className="space-y-3">
+                                <button className="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold py-3 px-4 rounded-lg transition-colors">
+                                    <i className="fas fa-share-alt mr-2"></i>
+                                    Share
+                                </button>
+                                <button
+                                    onClick={() => setModalOpen(true)}
+                                    className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors">
+                                    <i className="fas fa-heart mr-2"></i>
+                                    Donate now
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* <!-- Recent Donations --> */}
+                        <RecentDonations campaignId={campaign.id} />
 
 
-            <div className="border-t border-gray-200 my-6"></div>
+                        {/* <!-- Organizer Info --> */}
+                        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                            <h3 className="font-semibold text-gray-900 mb-4">Organizer</h3>
+                            <div className="flex items-center gap-3 mb-4">
+                                <img src={user?.user_profile?.profile_picture_url} className="w-12 h-12 bg-indigo-50 rounded-full flex-shrink-0 object-cover"
+                                    alt="Organizer Profile">
 
-            {/* --- Progress Section --- */}
-            <div className="my-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <div className="flex justify-between items-center mb-2 text-sm font-medium text-gray-700">
-                    <span>Raised</span>
-                    <span>Goal</span>
-                </div>
-                <div className="flex justify-between items-baseline mb-2">
-                    <strong className="text-2xl font-semibold text-green-600">
-                        NPR {campaign.current_amount?.toLocaleString() ?? '0'}
-                    </strong>
-                    <span className="text-lg text-gray-700">
-                        NPR {campaign.funding_goal?.toLocaleString() ?? 'N/A'}
-                    </span>
-                </div>
-                {/* Visual Progress Bar */}
-                <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden border border-gray-300">
-                    <div
-                        className="bg-gradient-to-r from-green-400 to-blue-500 h-4 rounded-full flex items-center justify-center"
-                        style={{ width: `${progressPercent}%` }}
-                        role="progressbar"
-                        aria-valuenow={progressPercent}
-                        aria-valuemin="0"
-                        aria-valuemax="100"
-                    >
-                        {/* Optional: Show percentage inside bar if it's wide enough */}
-                        {progressPercent > 10 && (
-                            <span className="text-xs font-bold text-white text-shadow-sm">
-                                {Math.round(progressPercent)}%
-                            </span>
-                        )}
+                                </img>
+                                <div>
+                                    <div className="font-medium text-gray-900">{campaign.user.full_name}</div>
+                                    <div className="text-sm text-gray-600">Organizer</div>
+                                </div>
+                            </div>
+                            <button className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors text-sm">
+                                Contact
+                            </button>
+                        </div>
+
                     </div>
                 </div>
-                {/* Optional: Display number of donors if available */}
-                {/* <p className="text-sm text-gray-500 mt-2">{campaign.donor_count ?? 0} donors</p> */}
             </div>
 
-            <div className="border-t border-gray-200 my-6"></div>
 
-            {/* --- Story Section --- */}
-            <h3 className="text-2xl font-semibold text-gray-800 mb-4">
-                Story
-            </h3>
-            {/* Apply prose for better typography if @tailwindcss/typography is installed */}
-            {/* Or use manual styling like below */}
-            <div className="bg-white p-5 rounded-md border border-gray-200 whitespace-pre-wrap text-gray-700 leading-relaxed prose prose-lg max-w-none">
-                {campaign.story || 'No story provided.'}
-            </div>
+            {/* =========================================================================== */}
+            <DonationModal
+                isOpen={isModalOpen}
+                onClose={() => setModalOpen(false)}
+                user={user}
+                campaign={campaign}
+                campaignId={campaign.id}
+                setCampaign={setCampaign}
+                makeDonation={makeDonation}
+                onDonationSuccess={handleDonationSuccess}
+            />
 
-            {/* --- Donation Section --- */}
-            <div className="border-t border-gray-200 my-8"></div>
-            <div className="mt-8 p-6 border border-dashed border-gray-300 rounded-lg bg-gray-50">
-                <h4 className="text-xl font-semibold text-gray-700 mb-4 text-center">
-                    Donate to this Campaign
-                </h4>
 
-                {donationSuccess && (
-                    <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4 text-center">
-                        {donationSuccess}
-                    </div>
-                )}
+            <UpdateMessageModal
+                isOpen={isUpdateModalOpen}
+                onClose={() => setUpdateModalOpen(false)}
+                user={user}
+                campaignId={campaign.id}
+            />
 
-                {donationError && (
-                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-center">
-                        {donationError}
-                    </div>
-                )}
-
-                {user ? (
-                    <form onSubmit={handleDonationSubmit} className="flex flex-col sm:flex-row sm:items-center gap-4 justify-center">
-                        <input
-                            type="number"
-                            placeholder="Enter amount (NPR)"
-                            value={donationAmount}
-                            onChange={(e) => setDonationAmount(e.target.value)}
-                            min="1"
-                            step="1"
-                            required
-                            className="border border-gray-300 rounded px-4 py-2 w-full sm:w-auto"
-                        />
-                        <button
-                            type="submit"
-                            disabled={isDonating}
-                            className={`bg-indigo-600 text-white font-bold px-6 py-2 rounded hover:bg-indigo-700 ${isDonating ? 'opacity-60 cursor-not-allowed' : ''}`}
-                        >
-                            {isDonating ? 'Processing...' : 'Donate'}
-                        </button>
-                    </form>
-                ) : (
-                    <p className="text-center text-gray-600">
-                        Please{' '}
-                        <Link to="/login" className="text-indigo-600 font-medium hover:underline">
-                            log in
-                        </Link>{' '}
-                        to donate.
-                    </p>
-                )}
-            </div>
 
 
         </div>

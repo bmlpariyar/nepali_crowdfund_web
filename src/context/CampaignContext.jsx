@@ -7,9 +7,9 @@ const defaultData = {
   funding_goal: "",
   deadline: "",
   category_id: "",
-  image_url: "",
+  cover_image: "",
   video_url: "",
-  country: "",
+  // country: "",
 };
 
 export const useCampaign = () => useContext(CampaignContext);

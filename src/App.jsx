@@ -21,7 +21,7 @@ function App() {
     <div>
       <Navbar />
 
-      <div>
+      <div className="bg-gray-50">
         <Routes>
           <Route path="/" element={<CampaignListPage />} />
           <Route path="/campaigns" element={<CampaignListPage />} />
