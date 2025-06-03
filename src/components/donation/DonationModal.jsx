@@ -119,7 +119,7 @@ const DonationModal = ({
                                     setDonationAmount(amount)
                                 }}
                             >
-                                ${amount}
+                                Rs {amount}
                             </button>
                         ))}
                     </div>

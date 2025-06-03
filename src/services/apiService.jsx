@@ -104,13 +104,20 @@ export const createCampaign = (campaignData) => {
   });
 };
 
+export const updateCampaignById = (id, data) => {
+  return apiClient.put(`/campaigns/${id}`, data, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+};
+
+
+
 export const deleteCampaignById = (id) => {
   return apiClient.delete(`/campaigns/${id}`);
 };
 
-export const updateCampaignById = (id, campaignData) => {
-  return apiClient.patch(`/campaigns/${id}`, { campaign: campaignData });
-};
 
 export const makeDonation = (campaignId, donationData) => {
   return apiClient.post(`/campaigns/${campaignId}/donations`, {
@@ -154,6 +161,9 @@ export const getAllDonations = (campaignId) => {
 };
 export const getTopDonations = (campaignId) => {
   return apiClient.get(`/campaigns/${campaignId}/top_donations`);
+};
+export const donation_highlight = (campaignId) => {
+  return apiClient.get(`/campaigns/${campaignId}/donation_highlight`);
 };
 
 

@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { postUpdateMessages } from '../../services/apiService';
 
-const UpdateMessageModal = ({ isOpen, onClose, user, campaignId }) => {
+const UpdateMessageModal = ({
+    isOpen,
+    onClose,
+    user,
+    campaignId,
+    onUpdateSuccess
+}) => {
     const [title, setTitle] = useState('');
     const [message, setMessage] = useState('');
     const [mediaImage, setMediaImage] = useState(null);
@@ -42,6 +48,9 @@ const UpdateMessageModal = ({ isOpen, onClose, user, campaignId }) => {
             setError(null);
             setSuccess(null);
             onClose();
+            if (onUpdateSuccess) {
+                onUpdateSuccess();
+            }
 
         } catch (err) {
             console.error("Error submitting update message:", err);

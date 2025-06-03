@@ -9,6 +9,7 @@ import SupportMessages from './donation/SupportMessages';
 import UpdateMessageModal from './campaign/UpdateMessageModal';
 import CampaignStatusUpdate from './CampaignStatusUpdate';
 import RecentDonations from './donation/RecentDonations';
+import ShareModal from './donation/ShareModal';
 
 const calculateProgress = (current, goal) => {
     if (!goal || goal <= 0 || !current || current <= 0) {
@@ -28,9 +29,15 @@ function CampaignDetailPage() {
     const [isModalOpen, setModalOpen] = useState(false);
     const [isUpdateModalOpen, setUpdateModalOpen] = useState(false);
     const [messageRefreshKey, setMessageRefreshKey] = useState(0);
+    const [updateRefreshKey, setUpdateRefreshKey] = useState(0);
+    const [showShareModal, setShowShareModal] = useState(false);
 
     const handleDonationSuccess = () => {
         setMessageRefreshKey(prev => prev + 1); // triggers SupportMessages to refresh
+    };
+
+    const handleUpdateMessageSuccess = () => {
+        setUpdateRefreshKey(prev => prev + 1); // triggers CampaignStatusUpdate to refresh
     };
 
     useEffect(() => {
@@ -227,7 +234,7 @@ function CampaignDetailPage() {
                     <div className="rounded-lg overflow-hidden shadow-lg">
                         <img src={campaign.cover_image_url || 'https://via.placeholder.com/600x400'}
                             alt="Campaign Image"
-                            className="w-full h-80 object-cover" />
+                            className="w-full h-[30rem] object-cover" />
                     </div>
                     {/* story section */}
                     <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200">
@@ -256,7 +263,7 @@ function CampaignDetailPage() {
                     </div>
 
                     {/* update section */}
-                    <CampaignStatusUpdate campaignId={campaign.id} user={user} />
+                    <CampaignStatusUpdate campaignId={campaign.id} retriggerKey={updateRefreshKey} />
                     {/* <!-- Comments/Messages Section --> */}
                     <SupportMessages campaignId={campaign.id}
                         refreshTrigger={messageRefreshKey} />
@@ -326,7 +333,9 @@ function CampaignDetailPage() {
 
                             {/* <!-- Action Buttons --> */}
                             <div className="space-y-3">
-                                <button className="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold py-3 px-4 rounded-lg transition-colors">
+                                <button
+                                    onClick={() => setShowShareModal(true)}
+                                    className="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold py-3 px-4 rounded-lg transition-colors">
                                     <i className="fas fa-share-alt mr-2"></i>
                                     Share
                                 </button>
@@ -340,7 +349,7 @@ function CampaignDetailPage() {
                         </div>
 
                         {/* <!-- Recent Donations --> */}
-                        <RecentDonations campaignId={campaign.id} />
+                        <RecentDonations campaignId={campaign.id} refreshTrigger={messageRefreshKey} />
 
 
                         {/* <!-- Organizer Info --> */}
@@ -384,6 +393,13 @@ function CampaignDetailPage() {
                 onClose={() => setUpdateModalOpen(false)}
                 user={user}
                 campaignId={campaign.id}
+                onUpdateSuccess={handleUpdateMessageSuccess}
+            />
+
+            <ShareModal
+                isOpen={showShareModal}
+                onClose={() => setShowShareModal(false)}
+                campaignUrl={`http://localhost:3001/campaigns/${campaignId}`}
             />
 
 
