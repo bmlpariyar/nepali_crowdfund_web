@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchCampaignById, updateCampaignById, fetchCategories } from '../services/apiService';
 import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-toastify';
 
 function UpdateCampaignPage() {
     const { id } = useParams();
@@ -103,8 +104,7 @@ function UpdateCampaignPage() {
             }
 
             await updateCampaignById(id, data);
-
-            alert('Campaign updated successfully!');
+            toast.success("Campaign updated successfully!");
             navigate(`/campaigns/${id}`);
         } catch (err) {
             console.error('Error updating campaign:', err);
@@ -117,7 +117,7 @@ function UpdateCampaignPage() {
     }
 
     if (error) {
-        return <div className="text-red-500">{error}</div>;
+        return toast.error(error);;
     }
 
     return (

@@ -120,8 +120,8 @@ function CampaignDetailPage() {
                     <span className="block sm:inline ml-2">{error}</span>
                 </div>
                 <Link
-                    to="/campaigns" // Link back to the list page
-                    className="text-indigo-600 hover:text-indigo-800 font-medium"
+                    to="/campaigns"
+                    className="text-indigo-600 hover:text-indigo-800 cursor-pointer font-medium -z-20"
                 >
                     &larr; Back to Campaigns
                 </Link>

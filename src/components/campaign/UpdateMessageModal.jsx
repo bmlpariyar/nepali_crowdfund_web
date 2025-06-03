@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { postUpdateMessages } from '../../services/apiService';
+import { toast } from 'react-toastify';
 
 const UpdateMessageModal = ({
     isOpen,
@@ -14,6 +15,19 @@ const UpdateMessageModal = ({
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
 
+
+    useEffect(() => {
+        if (error) {
+            toast.error(error);
+        }
+    }, [error]);
+
+    // Show success toast only once when success changes
+    useEffect(() => {
+        if (success) {
+            toast.success(success);
+        }
+    }, [success]);
     if (!isOpen) return null;
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -24,12 +38,12 @@ const UpdateMessageModal = ({
 
         // Basic validation
         if (!user) {
-            setError("Please log in to submit an update.");
+            toast.error("Please log in to submit an update.");
             return;
         }
 
-        if (!message.trim()) {
-            setError("Update message cannot be empty.");
+        if (!message.trim() || !title.trim()) {
+            toast.error("Update message cannot be empty.");
             return;
         }
 
@@ -44,9 +58,8 @@ const UpdateMessageModal = ({
             await postUpdateMessages(campaignId, data);
             setSuccess("Update message submitted successfully!");
             setMessage('');
+            setTitle('');
             setMediaImage(null);
-            setError(null);
-            setSuccess(null);
             onClose();
             if (onUpdateSuccess) {
                 onUpdateSuccess();
@@ -97,16 +110,7 @@ const UpdateMessageModal = ({
                             className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
                         />
                     </div>
-                    {error && (
-                        <div className="mt-4 text-red-600">
-                            <p>{error}</p>
-                        </div>
-                    )}
-                    {success && (
-                        <div className="mt-4 text-green-600">
-                            <p>{success}</p>
-                        </div>
-                    )}
+
                     <div className="flex justify-end mt-4">
                         <button
                             onClick={handleSubmit}

@@ -16,11 +16,23 @@ import CreatePage2 from "./components/campaign/CreatePage2";
 import CreatePage3 from "./components/campaign/CreatePage3";
 import CreatePage4 from "./components/campaign/CreatePage4";
 import PreviewPage from "./components/campaign/PreviewPage";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 function App() {
   return (
     <div>
       <Navbar />
-
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
       <div className="bg-gray-50">
         <Routes>
           <Route path="/" element={<CampaignListPage />} />
