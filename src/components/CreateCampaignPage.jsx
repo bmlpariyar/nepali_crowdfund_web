@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { createCampaign, fetchCategories } from "../services/apiService";
+import { toast } from "react-toastify";
 
 function CreateCampaignPage() {
   const { user } = useAuth();
@@ -65,9 +66,7 @@ function CreateCampaignPage() {
     };
 
     try {
-      // The apiService interceptor will add the auth token
       const response = await createCampaign(campaignData);
-      // Navigate to the newly created campaign's detail page using its ID
       navigate(`/campaigns/${response.data.id}`);
     } catch (err) {
       console.error("Error creating campaign:", err.response);
@@ -309,11 +308,10 @@ function CreateCampaignPage() {
           <button
             type="submit"
             disabled={isLoading || isLoadingCategories}
-            className={`bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded focus:outline-none focus:shadow-outline ${
-              isLoading || isLoadingCategories
-                ? "opacity-60 cursor-not-allowed"
-                : ""
-            }`}
+            className={`bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded focus:outline-none focus:shadow-outline ${isLoading || isLoadingCategories
+              ? "opacity-60 cursor-not-allowed"
+              : ""
+              }`}
           >
             {isLoading ? "Creating..." : "Create Campaign"}
           </button>

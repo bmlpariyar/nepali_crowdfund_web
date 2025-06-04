@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useCampaign } from "../../context/CampaignContext";
 import { Link } from "react-router-dom";
 
@@ -7,13 +7,26 @@ const CreatePage3 = () => {
   const [preview, setPreview] = useState(
     campaignData.cover_image ? URL.createObjectURL(campaignData.cover_image) : null
   );
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef(null);
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
+  const handleImageChange = (file) => {
+    if (file && file.type.startsWith("image/")) {
       updateCampaign({ cover_image: file });
       setPreview(URL.createObjectURL(file));
     }
+  };
+
+  const handleFileInputChange = (e) => {
+    const file = e.target.files[0];
+    handleImageChange(file);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files[0];
+    handleImageChange(file);
   };
 
   return (
@@ -27,23 +40,41 @@ const CreatePage3 = () => {
       </div>
 
       {/* Right Content */}
-      <div className="w-3/4 px-12 py-24">
-        <div className="max-w-xl mx-auto">
+      <div className="w-3/4 px-12 py-24 bg-white flex flex-col justify-between">
+        <div className="max-w-4xl w-full mx-auto">
           <label className="block mb-4 text-lg font-semibold">
             Cover Image (JPEG/PNG)
           </label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:border file:border-gray-300 file:rounded-md file:bg-white file:text-sm file:font-semibold file:text-gray-700 hover:file:bg-gray-100"
-          />
+
+          <div
+            className={` border-2 border-dashed h-96 rounded-xl p-10 text-center cursor-pointer transition-all flex flex-col justify-center ${isDragging ? "border-green-500 bg-green-50" : "border-gray-300 bg-gray-50"
+              }`}
+            onClick={() => fileInputRef.current.click()}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDragging(true);
+            }}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={handleDrop}
+          >
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              onChange={handleFileInputChange}
+              className="hidden"
+            />
+            <p className="text-gray-600">
+              Drag & drop your image here or <span className="text-green-600 font-semibold">click to browse</span>
+            </p>
+            <p className="text-xs text-gray-400 mt-2">Accepted formats: JPEG, PNG</p>
+          </div>
 
           {preview && (
             <img
               src={preview}
               alt="Preview"
-              className="mt-6 w-full h-64 object-cover rounded-lg"
+              className="mt-6 w-full h-[25rem] object-cover rounded-lg"
             />
           )}
         </div>
@@ -51,15 +82,22 @@ const CreatePage3 = () => {
         {/* Footer */}
         <div className="mt-16">
           <hr className="border border-gray-300 mb-6" />
-          <div className="flex justify-end">
+          <div className="flex justify-between items-center">
+            <Link
+              to="/create/campaign/step2"
+              className={`bg-gray-600 hover:bg-gray-700 text-white font-medium px-6 py-2 rounded-lg transition`}
+            >
+              Back
+            </Link>
             <Link
               to="/create/campaign/step4"
-              className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700"
+              className={`bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-2 rounded-lg transition`}
             >
               Continue
             </Link>
           </div>
         </div>
+
       </div>
     </div>
   );

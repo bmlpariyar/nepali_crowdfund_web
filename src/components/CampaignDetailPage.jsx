@@ -356,7 +356,7 @@ function CampaignDetailPage() {
                         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                             <h3 className="font-semibold text-gray-900 mb-4">Organizer</h3>
                             <div className="flex items-center gap-3 mb-4">
-                                <img src={user?.user_profile?.profile_picture_url} className="w-12 h-12 bg-indigo-50 rounded-full flex-shrink-0 object-cover"
+                                <img src={campaign?.user_profile?.profile_picture_url} className="w-12 h-12 bg-indigo-50 rounded-full flex-shrink-0 object-cover"
                                     alt="Organizer Profile">
 
                                 </img>

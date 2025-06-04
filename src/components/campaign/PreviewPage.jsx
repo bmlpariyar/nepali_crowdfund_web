@@ -2,6 +2,7 @@ import { useNavigate, Link } from "react-router-dom";
 
 import { createCampaign } from "../../services/apiService";
 import { useCampaign } from "../../context/CampaignContext";
+import { toast } from "react-toastify";
 
 const PreviewPage = () => {
   const navigate = useNavigate();
@@ -11,12 +12,12 @@ const PreviewPage = () => {
   const handleSubmit = async () => {
     try {
       const response = await createCampaign(campaignData);
-      alert("Campaign created successfully!");
+      toast.success("Campaign created successfully!");
       resetCampaign();
       navigate(`/campaigns/${response.data.id}`);
     } catch (error) {
       console.error("Submission error:", error);
-      alert("Something went wrong!");
+      toast.error("Failed to create campaign. Please try again.");
     }
   };
 
@@ -53,19 +54,24 @@ const PreviewPage = () => {
         <strong>Video URL:</strong> {campaignData.video_url}
       </p>
 
-      <div>
-        <Link
-          to="/create/campaign/step4"
-          className="mt-4 bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700"
-        >
-          Back
-        </Link>
-        <button
-          onClick={handleSubmit}
-          className="mt-4 bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700"
-        >
-          Submit Campaign
-        </button>
+      {/* ===Footer section=== */}
+      <div className="mt-16">
+        <hr className="border border-gray-300 mb-6" />
+        <div className="flex justify-between items-center">
+          <Link
+            to="/create/campaign/step4"
+            className={`bg-gray-600 hover:bg-gray-700 text-white font-medium px-6 py-2 rounded-lg transition`}
+          >
+            Back
+          </Link>
+
+          <button
+            onClick={handleSubmit}
+            className="bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-2 rounded-lg transition"
+          >
+            Submit Campaign
+          </button>
+        </div>
       </div>
     </div>
   );

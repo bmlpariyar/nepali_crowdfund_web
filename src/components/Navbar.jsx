@@ -35,8 +35,7 @@ function Navbar() {
                 // className={({ isActive }) => isActive ? activeClassName : inactiveClassName} // Apply active styles
                 // If you want exact match for home, use end prop:
                 className={({ isActive }) =>
-                  `${
-                    isActive ? activeClassName : inactiveClassName
+                  `${isActive ? activeClassName : inactiveClassName
                   } text-sm font-medium transition duration-150 ease-in-out`
                 }
                 end // Add end prop for exact match on "/"
@@ -47,8 +46,7 @@ function Navbar() {
                 <NavLink
                   to="/create/campaign/step1"
                   className={({ isActive }) =>
-                    `${
-                      isActive ? activeClassName : inactiveClassName
+                    `${isActive ? activeClassName : inactiveClassName
                     } text-sm font-medium transition duration-150 ease-in-out`
                   }
                 >
@@ -72,10 +70,10 @@ function Navbar() {
                       src={
                         user.user_profile.profile_picture_url ||
                         "https://ui-avatars.com/api/?name=" +
-                          encodeURIComponent(user.full_name || "User") +
-                          "&size=128&background=6366f1&color=ffffff"
+                        encodeURIComponent(user.full_name || "User") +
+                        "&size=128&background=6366f1&color=ffffff"
                       }
-                      className="w-10 h-10 bg-white rounded-full border-white"
+                      className="w-10 h-10 bg-white object-cover rounded-full border-2 border-gray-200 shadow-sm"
                       alt=""
                     />
                   </Link>
@@ -92,8 +90,7 @@ function Navbar() {
                 <NavLink
                   to="/login"
                   className={({ isActive }) =>
-                    `${
-                      isActive ? activeClassName : inactiveClassName
+                    `${isActive ? activeClassName : inactiveClassName
                     } text-sm font-medium transition duration-150 ease-in-out`
                   }
                 >
