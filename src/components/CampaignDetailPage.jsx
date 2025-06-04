@@ -1,6 +1,6 @@
 // src/components/CampaignDetailPage.js
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { fetchCampaignById, makeDonation } from '../services/apiService';
 import { useAuth } from '../context/AuthContext';
 import { deleteCampaignById } from '../services/apiService';
@@ -10,6 +10,9 @@ import UpdateMessageModal from './campaign/UpdateMessageModal';
 import CampaignStatusUpdate from './CampaignStatusUpdate';
 import RecentDonations from './donation/RecentDonations';
 import ShareModal from './donation/ShareModal';
+import Button from './ui/Button';
+import AlertModal from './modals/AlertModal';
+import { toast } from 'react-toastify';
 
 const calculateProgress = (current, goal) => {
     if (!goal || goal <= 0 || !current || current <= 0) {
@@ -31,6 +34,9 @@ function CampaignDetailPage() {
     const [messageRefreshKey, setMessageRefreshKey] = useState(0);
     const [updateRefreshKey, setUpdateRefreshKey] = useState(0);
     const [showShareModal, setShowShareModal] = useState(false);
+    const [showAlert, setShowAlert] = useState(false);
+    const navigate = useNavigate();
+
 
     const handleDonationSuccess = () => {
         setMessageRefreshKey(prev => prev + 1); // triggers SupportMessages to refresh
@@ -83,21 +89,18 @@ function CampaignDetailPage() {
 
 
     const handleDelete = async () => {
-        if (!window.confirm("Are you sure you want to delete this campaign? This action cannot be undone.")) {
-            return;
-        }
-
         try {
-            await deleteCampaignById(campaignId); // Call delete API
-            window.location.href = "/campaigns"; // Redirect to campaigns list
+            await deleteCampaignById(campaignId);
+            toast.success("Campaign deleted successfully!");
+            navigate("/campaigns");
         } catch (err) {
             console.error(`Error deleting campaign ${campaignId}:`, err);
-            setDeleteError(`Failed to delete campaign. ${err.message || 'Please try again later.'}`);
+            toast.error(`Failed to delete campaign. ${err.message || 'Please try again later.'}`);
         }
     }
 
     const handleUpdate = () => {
-        window.location.href = `/update-campaign/${campaignId}`;
+        navigate(`/update-campaign/${campaignId}`)
     }
 
 
@@ -132,9 +135,6 @@ function CampaignDetailPage() {
     if (authLoading) {
         return <div>Checking authentication...</div>;
     }
-
-    // --- Campaign Not Found / Empty Data State ---
-    // This handles cases where loading finished, no specific error string was set, but campaign is still null/undefined
     if (!campaign) {
         return (
             <div className="container mx-auto px-4 py-8 max-w-3xl text-center">
@@ -158,7 +158,6 @@ function CampaignDetailPage() {
 
     return (
         <div className=" bg-white container mx-auto px-4 py-8 max-w-7xl">
-            {/* Optional: Back Link */}
             <Link
                 to="/campaigns"
                 className="text-sm text-indigo-600 hover:text-indigo-800 mb-6 inline-block"
@@ -187,7 +186,6 @@ function CampaignDetailPage() {
                             </div>
                         </div>
                         <div className='flex flex-col sm:flex-row sm:items-center justify-between mb-6'>
-                            {/* Trust Badge  */}
                             <div className="inline-flex items-center gap-2 bg-green-50 text-green-700 px-3 py-1 rounded-full text-sm border border-green-200">
                                 <i className="fas fa-shield-alt"></i>
                                 <span>Donation protected</span>
@@ -196,14 +194,11 @@ function CampaignDetailPage() {
                                 {user?.id === campaign.user?.id && (
                                     <div className="mb-6">
                                         <button
-                                            onClick={handleDelete}
+                                            onClick={() => setShowAlert(true)}
                                             className="bg-red-500 text-white text-xs font-bold py-1 px-2 rounded-full hover:bg-red-600"
                                         >
                                             Delete
                                         </button>
-                                        {deleteError && (
-                                            <p className="text-red-500 text-sm mt-2">{deleteError}</p>
-                                        )}
                                     </div>
                                 )}
                                 {user?.id === campaign.user?.id && (
@@ -232,8 +227,9 @@ function CampaignDetailPage() {
 
                     </div>
                     <div className="rounded-lg overflow-hidden shadow-lg">
-                        <img src={campaign.cover_image_url || 'https://via.placeholder.com/600x400'}
+                        <img src={campaign.cover_image_url || 'https://placehold.co/600x400/98a9d6/ffffff?text=No+Image'}
                             alt="Campaign Image"
+                            loading='lazy'
                             className="w-full h-[30rem] object-cover" />
                     </div>
                     {/* story section */}
@@ -262,9 +258,7 @@ function CampaignDetailPage() {
                         </div>
                     </div>
 
-                    {/* update section */}
                     <CampaignStatusUpdate campaignId={campaign.id} retriggerKey={updateRefreshKey} />
-                    {/* <!-- Comments/Messages Section --> */}
                     <SupportMessages campaignId={campaign.id}
                         refreshTrigger={messageRefreshKey} />
 
@@ -333,18 +327,18 @@ function CampaignDetailPage() {
 
                             {/* <!-- Action Buttons --> */}
                             <div className="space-y-3">
-                                <button
+                                <Button
                                     onClick={() => setShowShareModal(true)}
-                                    className="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold py-3 px-4 rounded-lg transition-colors">
+                                    gradientStart='from-yellow-600' gradientEnd='to-orange-600'>
                                     <i className="fas fa-share-alt mr-2"></i>
                                     Share
-                                </button>
-                                <button
+                                </Button>
+                                <Button
                                     onClick={() => setModalOpen(true)}
-                                    className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors">
+                                    gradientStart='from-green-600' gradientEnd='to-teal-600'>
                                     <i className="fas fa-heart mr-2"></i>
                                     Donate now
-                                </button>
+                                </Button>
                             </div>
                         </div>
 
@@ -365,9 +359,11 @@ function CampaignDetailPage() {
                                     <div className="text-sm text-gray-600">Organizer</div>
                                 </div>
                             </div>
-                            <button className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors text-sm">
+                            <Button gradientStart='from-gray-400'
+                                gradientEnd='to-gray-400'
+                            >
                                 Contact
-                            </button>
+                            </Button>
                         </div>
 
                     </div>
@@ -401,6 +397,13 @@ function CampaignDetailPage() {
                 onClose={() => setShowShareModal(false)}
                 campaignUrl={`http://localhost:3001/campaigns/${campaignId}`}
             />
+
+            <AlertModal
+                show={showAlert}
+                title='Are you sure you want to delete this campaign?'
+                message='This action cannot be undone.'
+                onConfirm={handleDelete}
+                onCancel={() => setShowAlert(false)} />
 
 
 

@@ -4,6 +4,7 @@ import { getAllDonations, getTopDonations, donation_highlight } from '../../serv
 import { formatDistanceToNowStrict } from 'date-fns';
 import clsx from 'clsx';
 import { startCase } from 'lodash';
+import Button from '../ui/Button';
 
 const RecentDonations = ({ campaignId, refreshTrigger }) => {
     const [allDonations, setAllDonations] = useState([]);
@@ -113,15 +114,19 @@ const RecentDonations = ({ campaignId, refreshTrigger }) => {
                                     <div className="font-medium text-gray-900">
                                         {donation.is_anonymous ? 'Anonymous' : donation.user.full_name}
                                     </div>
+
                                     <div className="text-sm text-gray-600">
                                         Rs {donation.amount}
-                                        <span className={clsx(
-                                            ' text-gray-700 ml-3 text-[0.6rem] px-4 py-1 rounded-full',
-                                            key === 'recent_donation' ? 'bg-green-100' : key === 'top_donation' ? 'bg-yellow-100' : 'bg-red-100'
-                                        )
 
-                                        }>
-                                            {startCase(key.replace('_', ' '))}
+
+                                        <span className={clsx(
+                                            'relative overflow-hidden text-white bg-gradient-to-r ml-3 text-[0.6rem] px-4 py-1 rounded-full transition-all duration-300 transform',
+                                            key === 'recent_donation' ? 'from-green-500 to-teal-600' :
+                                                key === 'top_donation' ? 'from-yellow-500 to-amber-600' :
+                                                    'from-red-500 to-rose-600'
+                                        )}>
+                                            <span className="relative z-10">{startCase(key.replace('_', ' '))}</span>
+                                            <div className="absolute inset-0 -skew-x-12 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-swipe-light"></div>
                                         </span>
 
                                     </div>
@@ -137,16 +142,16 @@ const RecentDonations = ({ campaignId, refreshTrigger }) => {
 
 
             <div className="mt-6 flex gap-3">
-                <button
+                <Button
                     onClick={() => handleOpenModal('all')}
-                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors text-sm">
+                >
                     All
-                </button>
-                <button
+                </Button>
+                <Button
                     onClick={() => handleOpenModal('top')}
-                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors text-sm">
+                >
                     Top
-                </button>
+                </Button>
             </div>
 
             {showModal && (

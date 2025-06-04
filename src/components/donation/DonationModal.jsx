@@ -88,8 +88,8 @@ const DonationModal = ({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-gray-400/25 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="bg-white w-full max-w-3xl p-6 rounded-2xl relative shadow-lg">
+        <div className="fixed inset-0 bg-gray-400/25 backdrop-blur-sm z-50 overflow-auto px-4 py-8">
+            <div className="bg-white w-full max-w-3xl mx-auto p-6 rounded-2xl relative shadow-lg max-h-[90vh] overflow-y-auto">
                 <button
                     onClick={onClose}
                     className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-lg font-bold"
@@ -111,7 +111,7 @@ const DonationModal = ({
                     </div>
                     <h2 className="text-xl font-semibold mb-4 ">Enter your donation</h2>
                     <div className="flex flex-wrap justify-around mt-4 space-x-2 mb-5">
-                        {['200', '500', '750', '1000', '1250', '2000'].map(amount => (
+                        {['500', '1000', '2000', '5000', '10000'].map(amount => (
                             <button
                                 key={amount}
                                 className={`py-4 px-6 border-2 rounded-xl font-bold transition duration-150 cursor-pointer ease-in-out ${selectedAmount === amount ? 'bg-green-500 text-white hover:bg-green-600' : ' text-gray-700'}`}

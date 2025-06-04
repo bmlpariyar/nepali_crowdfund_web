@@ -33,7 +33,7 @@ function App() {
         draggable
         pauseOnHover
       />
-      <div className="bg-gray-50">
+      <div className="bg-gray-50 mt-20">
         <Routes>
           <Route path="/" element={<CampaignListPage />} />
           <Route path="/campaigns" element={<CampaignListPage />} />

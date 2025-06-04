@@ -22,37 +22,61 @@ const PreviewPage = () => {
   };
 
   return (
-    <div className="p-10 max-w-3xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4">Preview Campaign</h2>
-      <p>
-        <strong>Title:</strong> {campaignData.title}
-      </p>
-      <p>
-        <strong>Story:</strong> {campaignData.story}
-      </p>
-      <p>
-        <strong>Goal:</strong> ${campaignData.funding_goal}
-      </p>
-      <p>
-        <strong>Deadline:</strong> {campaignData.deadline}
-      </p>
-      <p>
-        <strong>Category ID:</strong> {campaignData.category_id}
-      </p>
-      <img
-        src={
-          typeof campaignData.cover_image === "string"
-            ? campaignData.cover_image
-            : campaignData.cover_image
-              ? URL.createObjectURL(campaignData.cover_image)
-              : ""
-        }
-        alt="Campaign Cover"
-        className="w-full h-64 object-cover rounded-lg border border-gray-300 mb-4"
-      />
-      <p>
-        <strong>Video URL:</strong> {campaignData.video_url}
-      </p>
+    <div className="p-10 max-w-5xl mx-auto">
+
+      <div className="bg-white shadow-md rounded-lg p-6 border border-gray-200 space-y-4">
+        <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">
+          Preview Campaign
+        </h2>
+        <div>
+          <p className="text-lg font-semibold text-gray-700">Title</p>
+          <p className="text-gray-800">{campaignData.title}</p>
+        </div>
+
+        <div>
+          <p className="text-lg font-semibold text-gray-700">Story</p>
+          <p className="text-gray-800 whitespace-pre-line">{campaignData.story}</p>
+        </div>
+
+        <div className="">
+          <div>
+            <p className="text-lg font-semibold text-gray-700">Funding Goal</p>
+            <p className="text-gray-800">${campaignData.funding_goal}</p>
+          </div>
+
+          <div>
+            <p className="text-lg font-semibold text-gray-700">Deadline</p>
+            <p className="text-gray-800">{campaignData.deadline}</p>
+          </div>
+
+          <div>
+            <p className="text-lg font-semibold text-gray-700">Category</p>
+            <p className="text-gray-800">{campaignData.category_id}</p>
+          </div>
+        </div>
+
+        <div>
+          <p className="text-lg font-semibold text-gray-700 mb-2">Cover Image</p>
+          {campaignData.cover_image ? (
+            <img
+              src={
+                typeof campaignData.cover_image === "string"
+                  ? campaignData.cover_image
+                  : URL.createObjectURL(campaignData.cover_image)
+              }
+              alt="Campaign Cover"
+              className="w-full h-64 object-cover rounded-md border"
+            />
+          ) : (
+            <p className="text-gray-500">No cover image provided.</p>
+          )}
+        </div>
+
+        <div>
+          <p className="text-lg font-semibold text-gray-700">Video URL</p>
+          <p className="text-blue-600 break-words">{campaignData.video_url}</p>
+        </div>
+      </div>
 
       {/* ===Footer section=== */}
       <div className="mt-16">
@@ -60,7 +84,7 @@ const PreviewPage = () => {
         <div className="flex justify-between items-center">
           <Link
             to="/create/campaign/step4"
-            className={`bg-gray-600 hover:bg-gray-700 text-white font-medium px-6 py-2 rounded-lg transition`}
+            className="bg-gray-600 hover:bg-gray-700 text-white font-medium px-6 py-2 rounded-lg transition"
           >
             Back
           </Link>
@@ -74,6 +98,7 @@ const PreviewPage = () => {
         </div>
       </div>
     </div>
+
   );
 };
 

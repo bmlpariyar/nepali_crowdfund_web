@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { getCampaignUpdateMessages } from '../services/apiService'
 import { formatDistanceToNowStrict } from 'date-fns';
-import { update } from 'lodash';
 
 
 const CampaignStatusUpdate = ({ campaignId, retriggerKey }) => {
