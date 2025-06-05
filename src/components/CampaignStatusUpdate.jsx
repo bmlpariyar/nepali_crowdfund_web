@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { getCampaignUpdateMessages } from '../services/apiService'
 import { formatDistanceToNowStrict } from 'date-fns';
+import ImageDisplayModal from './modals/ImageDisplayModal';
 
 
 const CampaignStatusUpdate = ({ campaignId, retriggerKey }) => {
     const [updateMessages, setUpdateMessages] = useState([])
+    const [isModalOpen, setModalOpen] = useState(false);
+    const [selectedImage, setSelectedImage] = useState(null);
 
     useEffect(() => {
         const fetchMessages = async () => {
@@ -43,6 +46,14 @@ const CampaignStatusUpdate = ({ campaignId, retriggerKey }) => {
                             <p className="text-gray-700">
                                 {msg.message}
                             </p>
+                            <div>
+                                <img src={msg.media_urls}
+                                    onClick={() => {
+                                        setSelectedImage(msg.media_urls);
+                                        setModalOpen(true);
+                                    }}
+                                    className='mt-4 w-32 h-32 object-cover rounded-lg shadow transition-transform duration-700 hover:scale-110 cursor-pointer' />
+                            </div>
                         </div>
                     ))
                 ) : (
@@ -51,6 +62,11 @@ const CampaignStatusUpdate = ({ campaignId, retriggerKey }) => {
 
 
             </div>
+
+            <ImageDisplayModal
+                isOpen={isModalOpen}
+                onClose={() => setModalOpen(false)}
+                imageUrl={selectedImage} />
         </div>
     )
 }

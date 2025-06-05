@@ -8,85 +8,87 @@ import { toast } from 'react-toastify';
 
 // Memoized campaign card component to prevent unnecessary re-renders
 const CampaignCard = React.memo(({ campaign, calculatePercentage }) => (
-    <div
-        className="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 ease-out transform hover:-translate-y-2 border border-white/20 overflow-hidden animate-slide-up"
-    >
-        <div className="relative overflow-hidden">
-            <img
-                src={campaign.cover_image_url || 'https://placehold.co/400x240/98a9d6/ffffff?text=No+Image'}
-                alt="Campaign Cover"
-                className="w-full h-60 object-cover transition-transform duration-700 group-hover:scale-110"
-                loading="lazy"
-                onError={(e) => {
-                    e.target.src = 'https://placehold.co/400x240';
-                }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div className="absolute top-4 right-4">
-                <span className={clsx(
-                    campaign.status === 'active' ? 'bg-emerald-500' : 'bg-red-500',
-                    'text-white px-3 py-1 rounded-full text-sm font-medium shadow-lg'
-                )}>
-                    {startCase(campaign.status)}
-                </span>
+    <Link to={`/campaigns/${campaign.id}`}>
+        <div
+            className="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 ease-out transform hover:-translate-y-2 border border-white/20 overflow-hidden animate-slide-up"
+        >
+            <div className="relative overflow-hidden">
+                <img
+                    src={campaign.cover_image_url || 'https://placehold.co/400x240/98a9d6/ffffff?text=No+Image'}
+                    alt="Campaign Cover"
+                    className="w-full h-60 object-cover transition-transform duration-700 group-hover:scale-110"
+                    loading="lazy"
+                    onError={(e) => {
+                        e.target.src = 'https://placehold.co/400x240';
+                    }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="absolute top-4 right-4">
+                    <span className={clsx(
+                        campaign.status === 'active' ? 'bg-emerald-500' : 'bg-red-500',
+                        'text-white px-3 py-1 rounded-full text-sm font-medium shadow-lg'
+                    )}>
+                        {startCase(campaign.status)}
+                    </span>
+                </div>
+                <div className="absolute top-4 left-4">
+                    <span className={clsx(
+
+                        'bg-indigo-400/80 text-white px-2 py-1 rounded-full text-xs font-medium shadow-lg'
+                    )}>
+                        {startCase(campaign.category.name)}
+                    </span>
+                </div>
             </div>
-            <div className="absolute top-4 left-4">
-                <span className={clsx(
 
-                    'bg-indigo-400/80 text-white px-2 py-1 rounded-full text-xs font-medium shadow-lg'
-                )}>
-                    {startCase(campaign.category.name)}
-                </span>
-            </div>
-        </div>
-
-        <div className="p-6">
-            <Link to={`/campaigns/${campaign.id}`} className="block mb-3">
-                <h2 className="text-xl font-bold text-slate-800 mb-3 group-hover:text-indigo-600 transition-colors duration-300 line-clamp-2">
-                    {campaign.title}
-                </h2>
-            </Link>
-
-            <p className="text-slate-600 text-sm mb-6 line-clamp-3 leading-relaxed">
-                {campaign.story}
-            </p>
-
-            <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                    <div className="text-sm">
-                        <span className="font-semibold text-slate-700">Goal:</span>
-                        <span className="text-emerald-600 font-bold ml-1">
-                            NPR {campaign.funding_goal?.toLocaleString() ?? 'N/A'}
-                        </span>
-                    </div>
-                    <div className="text-sm">
-                        <span className="font-semibold text-slate-700">Raised:</span>
-                        <span className="text-indigo-600 font-bold ml-1">
-                            NPR {campaign.current_amount?.toLocaleString() ?? '0'}
-                        </span>
-                    </div>
+            <div className="p-6">
+                <div className="block mb-3">
+                    <h2 className="text-xl font-bold text-slate-800 mb-3 group-hover:text-indigo-600 transition-colors duration-300 line-clamp-2">
+                        {campaign.title}
+                    </h2>
                 </div>
 
-                {/* Progress bar */}
-                <div className="relative">
-                    <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
-                        <div
-                            className="bg-gradient-to-r from-emerald-500 to-teal-500 h-full rounded-full transition-all duration-1000 ease-out shadow-sm"
-                            style={{ width: `${calculatePercentage(campaign.current_amount, campaign.funding_goal)}%` }}
-                        ></div>
+                <p className="text-slate-600 text-sm mb-6 line-clamp-3 leading-relaxed">
+                    {campaign.story}
+                </p>
+
+                <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                        <div className="text-sm">
+                            <span className="font-semibold text-slate-700">Goal:</span>
+                            <span className="text-emerald-600 font-bold ml-1">
+                                NPR {campaign.funding_goal?.toLocaleString() ?? 'N/A'}
+                            </span>
+                        </div>
+                        <div className="text-sm">
+                            <span className="font-semibold text-slate-700">Raised:</span>
+                            <span className="text-indigo-600 font-bold ml-1">
+                                NPR {campaign.current_amount?.toLocaleString() ?? '0'}
+                            </span>
+                        </div>
                     </div>
-                    <div
-                        className="absolute -top-1 transform -translate-x-1/2"
-                        style={{ left: `${calculatePercentage(campaign.current_amount, campaign.funding_goal)}%` }}
-                    >
-                        <div className="bg-emerald-500 text-white text-[0.6rem] px-2 py-1 rounded-full font-medium shadow-lg">
-                            {calculatePercentage(campaign.current_amount, campaign.funding_goal).toFixed(0)}%
+
+                    {/* Progress bar */}
+                    <div className="relative">
+                        <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
+                            <div
+                                className="bg-gradient-to-r from-emerald-500 to-teal-500 h-full rounded-full transition-all duration-1000 ease-out shadow-sm"
+                                style={{ width: `${calculatePercentage(campaign.current_amount, campaign.funding_goal)}%` }}
+                            ></div>
+                        </div>
+                        <div
+                            className="absolute -top-1 transform -translate-x-1/2"
+                            style={{ left: `${calculatePercentage(campaign.current_amount, campaign.funding_goal)}%` }}
+                        >
+                            <div className="bg-emerald-500 text-white text-[0.6rem] px-2 py-1 rounded-full font-medium shadow-lg">
+                                {calculatePercentage(campaign.current_amount, campaign.funding_goal).toFixed(0)}%
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </Link>
 ));
 
 function CampaignListPage() {
@@ -196,14 +198,11 @@ function CampaignListPage() {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
                     {memoizedCampaigns.map((campaign) => (
-
-                        <Link to={`/campaigns/${campaign.id}`}>
-                            <CampaignCard
-                                key={campaign.id}
-                                campaign={campaign}
-                                calculatePercentage={calculatePercentage}
-                            />
-                        </Link>
+                        <CampaignCard
+                            key={campaign.id}
+                            campaign={campaign}
+                            calculatePercentage={calculatePercentage}
+                        />
                     ))}
                 </div>
             )}

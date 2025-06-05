@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react';
 import { postUpdateMessages } from '../../services/apiService';
 import { toast } from 'react-toastify';
+import Modal from '../ui/Modal';
 
 const UpdateMessageModal = ({
     isOpen,
@@ -12,42 +13,69 @@ const UpdateMessageModal = ({
     const [title, setTitle] = useState('');
     const [message, setMessage] = useState('');
     const [mediaImage, setMediaImage] = useState(null);
+    const [preview, setPreview] = useState(null);
+    const [isDragging, setIsDragging] = useState(false);
+    const fileInputRef = useRef(null);
+
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
 
+    useEffect(() => {
+        if (mediaImage) {
+            const objectUrl = URL.createObjectURL(mediaImage);
+            setPreview(objectUrl);
+            return () => URL.revokeObjectURL(objectUrl); // Cleanup on unmount or file change
+        } else {
+            setPreview(null);
+        }
+    }, [mediaImage]);
 
     useEffect(() => {
-        if (error) {
-            toast.error(error);
-        }
+        if (error) toast.error(error);
     }, [error]);
 
-    // Show success toast only once when success changes
     useEffect(() => {
-        if (success) {
-            toast.success(success);
-        }
+        if (success) toast.success(success);
     }, [success]);
+
     if (!isOpen) return null;
+
+    const handleImageChange = (file) => {
+        if (file && file.type.startsWith('image/')) {
+            setMediaImage(file);
+        } else {
+            toast.error('Please select a valid image file (JPEG or PNG).');
+        }
+    };
+
+    const handleFileInputChange = (e) => {
+        const file = e.target.files[0];
+        handleImageChange(file);
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+        const file = e.dataTransfer.files[0];
+        handleImageChange(file);
+    };
+
     const handleSubmit = async (event) => {
         event.preventDefault();
 
-        // Clear any previous messages
         setError(null);
         setSuccess(null);
 
-        // Basic validation
         if (!user) {
             toast.error("Please log in to submit an update.");
             return;
         }
 
-        if (!message.trim() || !title.trim()) {
-            toast.error("Update message cannot be empty.");
+        if (!title.trim() || !message.trim()) {
+            toast.error("Title and message cannot be empty.");
             return;
         }
 
-        // Prepare form data
         const data = {
             title: title.trim(),
             message: message.trim(),
@@ -57,14 +85,12 @@ const UpdateMessageModal = ({
         try {
             await postUpdateMessages(campaignId, data);
             setSuccess("Update message submitted successfully!");
-            setMessage('');
             setTitle('');
+            setMessage('');
             setMediaImage(null);
+            setPreview(null);
             onClose();
-            if (onUpdateSuccess) {
-                onUpdateSuccess();
-            }
-
+            if (onUpdateSuccess) onUpdateSuccess();
         } catch (err) {
             console.error("Error submitting update message:", err);
             setError(err.response?.data?.error || "Failed to submit update message.");
@@ -72,57 +98,81 @@ const UpdateMessageModal = ({
     };
 
     return (
-        <div className='fixed inset-0 bg-gray-400/25 backdrop-blur-sm flex items-center justify-center z-50'>
-            <div className="bg-white w-full max-w-3xl p-6 rounded-2xl relative shadow-lg">
-                <button
-                    onClick={onClose}
-                    className="absolute top-3 cursor-pointer right-3 text-gray-500 hover:text-gray-700 text-lg font-bold"
-                >
-                    &times;
-                </button>
-                <div>
-                    <h2 className="text-xl font-semibold mb-4 ">Enter progress update message:</h2>
-                    <input
-                        type="text"
-                        value={title}
-                        required
-                        onChange={(e) => setTitle(e.target.value)}
-                        className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-4"
-                        placeholder="Title "
-                    />
-                    <textarea
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                        required
-                        className="w-full h-32 p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        placeholder="Write your update message here..."
-                        rows="4"
-                    ></textarea>
 
-                    <div className="mt-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Attach Media (optional):
-                        </label>
+        <Modal
+            show={isOpen}
+            onClose={onClose}
+            title="Enter progress update message:"
+        >
+
+
+            <div>
+
+                <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-4"
+                    placeholder="Title"
+                />
+
+                <textarea
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    className="w-full h-32 p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    placeholder="Write your update message here..."
+                    rows="4"
+                />
+
+                <div className="mt-6">
+                    <label className="block mb-2 font-medium text-gray-700">
+                        Attach Image (Optional)
+                    </label>
+
+                    <div
+                        className={`border-2 border-dashed h-64 rounded-xl p-10 text-center cursor-pointer transition-all flex flex-col justify-center items-center ${isDragging ? "border-green-500 bg-green-50" : "border-gray-300 bg-gray-50"
+                            }`}
+                        onClick={() => fileInputRef.current.click()}
+                        onDragOver={(e) => {
+                            e.preventDefault();
+                            setIsDragging(true);
+                        }}
+                        onDragLeave={() => setIsDragging(false)}
+                        onDrop={handleDrop}
+                    >
                         <input
                             type="file"
                             accept="image/*"
-                            onChange={(e) => setMediaImage(e.target.files[0])}
-                            className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                            ref={fileInputRef}
+                            onChange={handleFileInputChange}
+                            className="hidden"
                         />
+                        <p className="text-gray-600">
+                            Drag & drop your image here or <span className="text-green-600 font-semibold">click to browse</span>
+                        </p>
+                        <p className="text-xs text-gray-400 mt-2">Accepted formats: JPEG, PNG</p>
                     </div>
 
-                    <div className="flex justify-end mt-4">
-                        <button
-                            onClick={handleSubmit}
-                            className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-150"
-                        >
-                            Submit Update
-                        </button>
-                    </div>
+                    {preview && (
+                        <img
+                            src={preview}
+                            alt="Preview"
+                            className="mt-6 w-full h-64 object-cover rounded-lg"
+                        />
+                    )}
+                </div>
+
+                <div className="flex justify-end mt-6">
+                    <button
+                        onClick={handleSubmit}
+                        className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-150"
+                    >
+                        Submit Update
+                    </button>
                 </div>
             </div>
-        </div>
-    )
-}
+        </Modal>
+    );
+};
 
-export default UpdateMessageModal
+export default UpdateMessageModal;

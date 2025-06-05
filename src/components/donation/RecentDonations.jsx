@@ -31,7 +31,7 @@ const RecentDonations = ({ campaignId, refreshTrigger }) => {
                 setTopDonations(topRes.data);
                 setHighlightedDonation(highlightRes.data);
             } catch (error) {
-                console.error("Error fetching donations:", error);
+                console.error("Error fetching donations:", error.message);
             }
         };
 
@@ -47,7 +47,7 @@ const RecentDonations = ({ campaignId, refreshTrigger }) => {
     const renderDonationList = (donations) => (
         <div className="space-y-4">
             {donations.map((donation) => (
-                <div key={donation.id} className="flex items-center gap-3">
+                <div div key={donation.id} className="flex items-center gap-3" >
                     <div className="w-8 h-8 bg-pink-100 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
                         {donation?.user?.avatar_url ? (
                             <img
@@ -76,8 +76,9 @@ const RecentDonations = ({ campaignId, refreshTrigger }) => {
                         </div>
                     </div>
                 </div>
-            ))}
-        </div>
+            ))
+            }
+        </div >
     );
 
     // Create children object for modal tabs
@@ -96,7 +97,7 @@ const RecentDonations = ({ campaignId, refreshTrigger }) => {
                         if (!donation) return null;
 
                         return (
-                            <div key={donation.id} className="flex items-center gap-3">
+                            <div key={`${donation.id}-${key}`} className="flex items-center gap-3">
                                 <div className="w-8 h-8 bg-pink-100 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
                                     {donation?.user?.avatar_url ? (
                                         <img

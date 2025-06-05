@@ -1,6 +1,5 @@
 import React from 'react';
 import Modal from '../ui/Modal';
-
 const AlertModal = ({
     show,
     title = 'Are you sure?',
@@ -9,9 +8,11 @@ const AlertModal = ({
     onCancel
 }) => {
     return (
-        <Modal show={show} onClose={onCancel} title={title}>
+        <Modal show={show} onClose={onCancel} >
             <div className="space-y-4 text-gray-700 text-lg">
-                <p>{message}</p>
+                <h1 className="text-2xl font-semibold text-gray-800">{title}</h1>
+                <hr className='border-3 rounded-full text-gray-400' />
+                <p className='text-gray-600 italic text-lg'>{message}</p>
                 <div className="flex justify-end gap-3 mt-6">
                     <button
                         onClick={onCancel}

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import clsx from 'clsx'; // Optional: for conditional classNames, or use ternaries manually
 
-const Modal = ({ show, onClose, title, children, tabs, initialTab }) => {
+const Modal = ({ show, onClose, title, children, tabs, initialTab, noScroll = false, ...props }) => {
     const [activeTab, setActiveTab] = useState(initialTab || tabs?.[0]?.key || 'default');
+    const modalSize = props.modalSize || 'w-full max-w-3xl max-h-[90vh]';
 
     useEffect(() => {
         if (initialTab) {
@@ -33,7 +34,7 @@ const Modal = ({ show, onClose, title, children, tabs, initialTab }) => {
 
     return (
         <div className="fixed inset-0 bg-gray-400/25 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="bg-white w-full max-w-3xl max-h-[90vh] p-6 rounded-2xl relative shadow-lg overflow-hidden">
+            <div className={`bg-white ${modalSize} p-6 rounded-2xl relative shadow-lg overflow-hidden`}>
                 <h2 className="text-2xl font-semibold mb-4">{title}</h2>
                 <button
                     onClick={onClose}
@@ -42,7 +43,9 @@ const Modal = ({ show, onClose, title, children, tabs, initialTab }) => {
                     &times;
                 </button>
                 {tabs && renderTabs()}
-                <div className="overflow-y-auto max-h-[60vh] pr-2">
+                <div className={clsx(
+                    noScroll ? 'w-full h-full' : 'overflow-y-auto max-h-[60vh] pr-2'
+                )}>
                     {tabs ? (
                         children[activeTab]
                     ) : (
@@ -50,7 +53,7 @@ const Modal = ({ show, onClose, title, children, tabs, initialTab }) => {
                     )}
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 
