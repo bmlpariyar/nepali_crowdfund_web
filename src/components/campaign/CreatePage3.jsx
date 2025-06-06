@@ -1,6 +1,8 @@
 import React, { useState, useRef } from "react";
 import { useCampaign } from "../../context/CampaignContext";
 import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const CreatePage3 = () => {
   const { campaignData, updateCampaign } = useCampaign();
@@ -9,6 +11,8 @@ const CreatePage3 = () => {
   );
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
+
+  const navigate = useNavigate();
 
   const handleImageChange = (file) => {
     if (file && file.type.startsWith("image/")) {
@@ -27,6 +31,14 @@ const CreatePage3 = () => {
     setIsDragging(false);
     const file = e.dataTransfer.files[0];
     handleImageChange(file);
+  };
+
+  const handleNext = () => {
+    if (!campaignData.cover_image) {
+      toast.error("Please upload a cover image.");
+      return;
+    }
+    navigate("/create/campaign/step4");
   };
 
   return (
@@ -89,12 +101,12 @@ const CreatePage3 = () => {
             >
               Back
             </Link>
-            <Link
-              to="/create/campaign/step4"
+            <button
+              onClick={handleNext}
               className={`bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-2 rounded-lg transition`}
             >
               Continue
-            </Link>
+            </button>
           </div>
         </div>
 

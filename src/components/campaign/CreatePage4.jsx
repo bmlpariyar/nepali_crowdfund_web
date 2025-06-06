@@ -1,16 +1,27 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useCampaign } from "../../context/CampaignContext";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const CreatePage4 = () => {
   const [title, setTitle] = useState("");
   const [story, setStory] = useState("");
   const { campaignData, updateCampaign } = useCampaign();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (campaignData.title) setTitle(campaignData.title);
     if (campaignData.story) setStory(campaignData.story);
   }, [campaignData]);
+
+  const handleNext = () => {
+    if (!title || !story) {
+      toast.error("Please add a title and story.");
+      return;
+    }
+    navigate("/create/campaign/preview");
+  };
 
   return (
     <div className="min-h-screen flex bg-white text-gray-800">
@@ -80,12 +91,12 @@ const CreatePage4 = () => {
             >
               Back
             </Link>
-            <Link
-              to="/create/campaign/preview"
+            <button
+              onClick={handleNext}
               className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition font-medium"
             >
               Continue
-            </Link>
+            </button>
           </div>
         </div>
       </div>

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { fetchCategories } from "../../services/apiService"; // ✅ using your existing service
 import { useCampaign } from "../../context/CampaignContext";
+import { toast } from "react-toastify";
 
 const CreatePage1 = () => {
   const [country, setCountry] = useState("United States");
@@ -9,8 +11,8 @@ const CreatePage1 = () => {
   const [selectedCategory, setSelectedCategory] = useState("");
 
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
-  const [formError, setFormError] = useState("");
   const { campaignData, updateCampaign } = useCampaign();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -18,10 +20,10 @@ const CreatePage1 = () => {
       try {
         const response = await fetchCategories(); // ✅ your custom API service
         setCategories(response.data || []);
-        setFormError("");
+
       } catch (err) {
         console.error("Error fetching categories:", err);
-        setFormError("Failed to load categories. Please try refreshing.");
+        toast.error("Failed to load categories. Please try refreshing.");
       } finally {
         setIsLoadingCategories(false);
       }
@@ -37,6 +39,15 @@ const CreatePage1 = () => {
       if (cat) setSelectedCategory(cat.name);
     }
   }, [categories, campaignData]);
+
+  const handleNext = () => {
+    if (!country || !selectedCategory) {
+      toast.error("Please select both location and category.");
+      return;
+    }
+
+    navigate("/create/campaign/step2");
+  };
 
   return (
     <div className="min-h-screen flex bg-white text-gray-800">
@@ -83,9 +94,7 @@ const CreatePage1 = () => {
             <label className="block text-lg font-semibold mb-3">
               What best describes why you're fundraising?
             </label>
-            {formError && (
-              <p className="text-red-500 text-sm mb-3">{formError}</p>
-            )}
+
             <div className="flex flex-wrap gap-3">
               {isLoadingCategories ? (
                 <p>Loading categories...</p>
@@ -97,11 +106,10 @@ const CreatePage1 = () => {
                       setSelectedCategory(cat.name);
                       updateCampaign({ category_id: cat.id });
                     }}
-                    className={`px-4 py-2 rounded-full border text-sm font-medium transition ${
-                      selectedCategory === cat.name
-                        ? "bg-green-600 text-white border-green-600"
-                        : "bg-white text-gray-700 border-gray-300 hover:bg-green-100"
-                    }`}
+                    className={`px-4 py-2 rounded-full border text-sm font-medium transition ${selectedCategory === cat.name
+                      ? "bg-green-600 text-white border-green-600"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-green-100"
+                      }`}
                   >
                     {cat.name}
                   </button>
@@ -115,12 +123,12 @@ const CreatePage1 = () => {
         <div className="mt-16">
           <hr className="border border-gray-300 mb-6" />
           <div className="flex justify-end">
-            <Link
-              to="/create/campaign/step2"
+            <button
+              onClick={handleNext}
               className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition font-medium"
             >
               Continue
-            </Link>
+            </button>
           </div>
         </div>
       </div>

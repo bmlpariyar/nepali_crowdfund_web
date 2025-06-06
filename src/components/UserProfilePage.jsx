@@ -132,11 +132,11 @@ function UserProfilePage() {
 
                         <div className="mt-6 border-t border-gray-200 pt-6">
                             <dl className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
-                                <div className="sm:col-span-2">
-                                    <dt className="text-sm font-medium text-gray-500 mb-2">Bio</dt>
+                                <div className="sm:col-span-2 shadow p-5 rounded-lg">
+                                    <dt className="text-lg font-medium text-gray-500 mb-2">Bio</dt>
                                     <dd className="text-sm text-gray-900 whitespace-pre-wrap leading-relaxed">
                                         {profile.bio ? (
-                                            <div className="bg-gray-50 p-4 rounded-lg">
+                                            <div className="bg-gray-50 p-4 rounded-lg break-words overflow-auto max-h-64">
                                                 {profile.bio}
                                             </div>
                                         ) : (
@@ -146,6 +146,7 @@ function UserProfilePage() {
                                         )}
                                     </dd>
                                 </div>
+
 
                                 <div>
                                     <dt className="text-sm font-medium text-gray-500">Location</dt>

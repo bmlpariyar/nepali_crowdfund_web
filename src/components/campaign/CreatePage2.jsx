@@ -1,16 +1,29 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useCampaign } from "../../context/CampaignContext";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const CreatePage2 = () => {
   const [fundingGoal, setFundingGoal] = useState("");
   const [deadline, setDeadline] = useState("");
   const { campaignData, updateCampaign } = useCampaign();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (campaignData.deadline) setDeadline(campaignData.deadline);
     if (campaignData.funding_goal) setFundingGoal(campaignData.funding_goal);
   }, [campaignData]);
+
+  const handleNext = () => {
+    if (!fundingGoal || !deadline) {
+      toast.error("Please add funding goal and deadline.");
+      return;
+    }
+
+    navigate("/create/campaign/step3");
+  };
+
 
   return (
     <div className="min-h-screen flex bg-white text-gray-800">
@@ -88,12 +101,12 @@ const CreatePage2 = () => {
             >
               Back
             </Link>
-            <Link
-              to="/create/campaign/step3"
+            <button
+              onClick={handleNext}
               className={`bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-2 rounded-lg transition`}
             >
               Continue
-            </Link>
+            </button>
           </div>
         </div>
       </div>
