@@ -94,8 +94,10 @@ export const createCampaign = (campaignData) => {
     formData.append("campaign[cover_image]", campaignData.cover_image);
   if (campaignData.video_url)
     formData.append("campaign[video_url]", campaignData.video_url);
-  if (campaignData.country)
-    formData.append("campaign[country]", campaignData.country);
+  if (campaignData.latitude)
+    formData.append("campaign[latitude]", campaignData.latitude);
+  if (campaignData.longitude)
+    formData.append("campaign[longitude]", campaignData.longitude);
 
   return apiClient.post("/campaigns", formData, {
     headers: {
@@ -141,6 +143,19 @@ export const updateMyProfile = (profileDataWithFile) => {
       "user_profile[date_of_birth]",
       profileDataWithFile.date_of_birth
     );
+
+  if (profileDataWithFile.latitude !== undefined)
+    formData.append(
+      "user_profile[latitude]",
+      profileDataWithFile.latitude
+    );
+
+  if (profileDataWithFile.longitude !== undefined)
+    formData.append(
+      "user_profile[longitude]",
+      profileDataWithFile.longitude
+    );
+
   if (profileDataWithFile.profile_image) {
     formData.append(
       "user_profile[profile_image]",
@@ -166,4 +181,61 @@ export const donation_highlight = (campaignId) => {
   return apiClient.get(`/campaigns/${campaignId}/donation_highlight`);
 };
 
+// ==================Featured Campaigns=====================
+export const fetchFeaturedCampaigns = () => {
+  return apiClient.get("/featured_campaigns");
+};
+
+// ======================Search===========================
+export const fetchSearchedCampaigns = async (searchParams) => {
+  try {
+    const params = new URLSearchParams();
+
+    if (searchParams.name) params.append('name', searchParams.name);
+    if (searchParams.status) params.append('status', searchParams.status);
+    if (searchParams.category) params.append('category', searchParams.category);
+    if (searchParams.sort_by) params.append('sort_by', searchParams.sort_by);
+    if (searchParams.min_goal) params.append('min_goal', searchParams.min_goal);
+    if (searchParams.max_goal) params.append('max_goal', searchParams.max_goal);
+    if (searchParams.page) params.append('page', searchParams.page);
+    if (searchParams.per_page) params.append('per_page', searchParams.per_page);
+
+    const response = await apiClient.get(`/search?${params.toString()}`);
+
+    // If you're using axios (which it looks like), response is always 2xx or throws
+    const data = response.data;
+
+    return {
+      data: data.campaigns,
+      pagination: data.pagination
+    };
+  } catch (error) {
+    console.error('Search campaigns error:', error);
+    throw error;
+  }
+};
+
+
+// ================CampaignViers==============
+export const logCampaignView = (campaignId) => {
+  return apiClient.post(`/campaigns/${campaignId}/view`);
+}
+
+// ===============Recommendations==============
+export const fetchRecommendations = () => apiClient.get('/recommendations/index');
+
+// ==============Location==============
+export const fetchLocation = (lat, lng) => {
+  return axios.get('https://nominatim.openstreetmap.org/reverse', {
+    params: {
+      format: 'json',
+      lat: lat,
+      lon: lng,
+    },
+    headers: {
+      'User-Agent': 'sahayog/1.0 (leopariyar8@gmail.com)',
+      'Accept-Language': 'en',
+    },
+  });
+};
 

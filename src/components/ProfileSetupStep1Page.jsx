@@ -5,15 +5,33 @@ import { useAuth } from '../context/AuthContext';
 import { updateMyProfile } from '../services/apiService';
 
 function ProfileSetupStep1Page() {
-    const { user, isLoading: authLoading /*, updateUserProfileLocally */ } = useAuth(); // Get user from context
+    const { user, isLoading: authLoading } = useAuth();
     const navigate = useNavigate();
 
     const [bio, setBio] = useState('');
     const [location, setLocation] = useState('');
     const [date_of_birth, setDateOfBirth] = useState('');
+    const [latitude, setLatitude] = useState('');
+    const [longitude, setLongitude] = useState('');
 
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        if ('geolocation' in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    setLatitude(position.coords.latitude.toString());
+                    setLongitude(position.coords.longitude.toString());
+                },
+                (error) => {
+                    console.warn("Location access denied or unavailable:", error.message);
+                }
+            );
+        }
+    }, []);
+
+
 
     // Pre-fill form if profile data already exists (e.g., user revisiting this step)
     useEffect(() => {
@@ -29,7 +47,7 @@ function ProfileSetupStep1Page() {
         setError(null);
         setLoading(true);
 
-        const profileData = { bio, location, date_of_birth };
+        const profileData = { bio, location, date_of_birth, latitude, longitude };
 
         try {
             const response = await updateMyProfile(profileData);
@@ -97,6 +115,22 @@ function ProfileSetupStep1Page() {
                             className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                             value={date_of_birth} onChange={(e) => setDateOfBirth(e.target.value)} />
                     </div>
+
+                    <div>
+                        <label htmlFor="latitude" className="block text-sm font-medium text-gray-700">Latitude</label>
+                        <input id="latitude" name="latitude" type="number"
+                            className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                            readOnly value={latitude || ''} onChange={(e) => setLatitude(e.target.value)} />
+                    </div>
+                    <div>
+                        <label htmlFor="longitude" className="block text-sm font-medium text-gray-700">Longitude</label>
+                        <input id="longitude" name="longitude" type="number"
+
+                            className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                            readOnly value={longitude || ''} onChange={(e) => setLongitude(e.target.value)} />
+                    </div>
+
+
 
                     <div className="flex items-center justify-between space-x-4">
                         <button type="button" onClick={handleSkip} disabled={loading}

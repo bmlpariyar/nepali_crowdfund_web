@@ -4,15 +4,60 @@ import { Link } from "react-router-dom";
 import { fetchCategories } from "../../services/apiService"; // ✅ using your existing service
 import { useCampaign } from "../../context/CampaignContext";
 import { toast } from "react-toastify";
+import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import L from "leaflet";
+import { fetchLocation } from "../../services/apiService";
+
+
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
+});
+
+
+const LocationMarker = ({ setLatitude, setLongitude }) => {
+  const [position, setPosition] = useState(null);
+
+  useMapEvents({
+    click(e) {
+      const { lat, lng } = e.latlng;
+      setPosition(e.latlng);
+      setLatitude(lat);
+      setLongitude(lng);
+    },
+  });
+
+  return position ? <Marker position={position} /> : null;
+};
+
+
 
 const CreatePage1 = () => {
-  const [country, setCountry] = useState("United States");
+  const [latitude, setLatitude] = useState("");
+  const [longitude, setLongitude] = useState("");
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [location, setLocation] = useState("");
 
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   const { campaignData, updateCampaign } = useCampaign();
   const navigate = useNavigate();
+
+
+  useEffect(() => {
+    if (!latitude || !longitude) return;
+
+    fetchLocation(latitude, longitude)
+      .then((response) => {
+        setLocation(response.data.display_name);
+      })
+      .catch((error) => {
+        console.error('Failed to fetch location:', error);
+      });
+  }, [latitude, longitude]);
+
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -33,7 +78,13 @@ const CreatePage1 = () => {
   }, []);
 
   useEffect(() => {
-    if (campaignData.country) setCountry(campaignData.country);
+    if (latitude && longitude) {
+      updateCampaign({ latitude: latitude, longitude: longitude });
+    }
+  }, [latitude, longitude]);
+
+
+  useEffect(() => {
     if (campaignData.category_id) {
       const cat = categories.find((c) => c.id === campaignData.category_id);
       if (cat) setSelectedCategory(cat.name);
@@ -41,7 +92,7 @@ const CreatePage1 = () => {
   }, [categories, campaignData]);
 
   const handleNext = () => {
-    if (!country || !selectedCategory) {
+    if (!latitude || !longitude || !selectedCategory) {
       toast.error("Please select both location and category.");
       return;
     }
@@ -53,7 +104,7 @@ const CreatePage1 = () => {
     <div className="min-h-screen flex bg-white text-gray-800">
       {/* Left Sidebar */}
       <div className="w-1/4 bg-gray-100 px-6 py-24 flex flex-col justify-center">
-        <div>
+        <div className="pl-8">
           <h1 className="text-2xl font-semibold mb-3">
             Let's begin your fundraising journey
           </h1>
@@ -64,28 +115,39 @@ const CreatePage1 = () => {
       </div>
 
       {/* Right Content Area */}
-      <div className="w-3/4 px-12 py-24 flex flex-col justify-between bg-white">
+      <div className="z-10 w-3/4 px-12 py-28 flex flex-col justify-between bg-white overflow-x-hidden">
         <div className="max-w-2xl w-full mx-auto">
           {/* Location Selection */}
           <div className="mb-10">
             <label className="block text-lg font-semibold mb-2">
               Where are you located?
             </label>
-            <div className="flex gap-4">
-              <select
-                className="w-1/2 border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500"
-                value={country}
-                onChange={(e) => {
-                  const newCountry = e.target.value;
-                  setCountry(newCountry);
-                  updateCampaign({ country: newCountry });
-                }}
+
+            <div className="mb-10">
+              <label className="block text-lg font-semibold mb-2">
+                Select your location on the map
+              </label>
+              <MapContainer
+                center={[27.7, 85.3]}
+                zoom={10}
+                scrollWheelZoom={true}
+                className="h-96 w-full max-h-[400px] rounded-lg border border-gray-300 shadow-sm overflow-hidden"
               >
-                <option value="United States">United States</option>
-                <option value="Nepal">Nepal</option>
-                <option value="India">India</option>
-                <option value="Other">Other</option>
-              </select>
+                <TileLayer
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
+                />
+                <LocationMarker setLatitude={setLatitude} setLongitude={setLongitude} />
+              </MapContainer>
+
+              {location && (
+                <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm text-green-800">
+                    <p className="font-bold text-xl">Selected Location:</p>
+                    <p className="text-md italic">{location}</p>
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -132,7 +194,7 @@ const CreatePage1 = () => {
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 

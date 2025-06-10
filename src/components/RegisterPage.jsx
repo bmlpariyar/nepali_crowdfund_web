@@ -1,5 +1,5 @@
 // src/components/RegisterPage.js
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
@@ -12,6 +12,7 @@ function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
+
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -132,7 +133,7 @@ function RegisterPage() {
             <div>
               <label
                 htmlFor="password"
-                cclassName="block text-sm font-medium text-gray-700"
+                className="block text-sm font-medium text-gray-700"
               >
                 Password
               </label>

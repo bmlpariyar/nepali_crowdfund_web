@@ -9,7 +9,8 @@ const defaultData = {
   category_id: "",
   cover_image: "",
   video_url: "",
-  // country: "",
+  latitude: "",
+  longitude: "",
 };
 
 export const useCampaign = () => useContext(CampaignContext);

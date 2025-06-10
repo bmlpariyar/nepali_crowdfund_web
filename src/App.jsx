@@ -16,12 +16,19 @@ import CreatePage2 from "./components/campaign/CreatePage2";
 import CreatePage3 from "./components/campaign/CreatePage3";
 import CreatePage4 from "./components/campaign/CreatePage4";
 import PreviewPage from "./components/campaign/PreviewPage";
+import LandingPage from "./components/landing_page/LandingPage";
+import SearchMain from "./components/search/SearchMain";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import 'leaflet/dist/leaflet.css';
+
+import LocationHandler from "./components/LocationHandler";
+
 function App() {
   return (
     <div>
       <Navbar />
+      <LocationHandler />
       <ToastContainer
         position="top-right"
         autoClose={3000}
@@ -33,9 +40,9 @@ function App() {
         draggable
         pauseOnHover
       />
-      <div className="bg-gray-50 mt-20">
+      <div className="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 min-h-screen ">
         <Routes>
-          <Route path="/" element={<CampaignListPage />} />
+          <Route path="/" element={<LandingPage />} />
           <Route path="/campaigns" element={<CampaignListPage />} />
           <Route path="/campaigns/:id" element={<CampaignDetailPage />} />
           <Route path="/login" element={<LoginPage />} />
@@ -121,6 +128,20 @@ function App() {
               <ProtectedRoute>
                 <PreviewPage />
               </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/main"
+            element={
+              <LandingPage />
+            }
+          />
+
+          <Route
+            path="/search"
+            element={
+              <SearchMain />
             }
           />
 

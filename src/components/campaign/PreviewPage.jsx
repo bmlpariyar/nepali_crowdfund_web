@@ -21,8 +21,9 @@ const PreviewPage = () => {
     }
   };
 
+
   return (
-    <div className="p-10 max-w-5xl mx-auto">
+    <div className="p-10 max-w-5xl mx-auto my-12">
 
       <div className="bg-white shadow-md rounded-lg p-6 border border-gray-200 space-y-4">
         <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">
@@ -47,6 +48,11 @@ const PreviewPage = () => {
           <div>
             <p className="text-lg font-semibold text-gray-700">Deadline</p>
             <p className="text-gray-800">{campaignData.deadline}</p>
+          </div>
+
+          <div>
+            <p className="text-lg font-semibold text-gray-700">Position</p>
+            <p className="text-gray-800">{campaignData.latitude}, {campaignData.longitude}</p>
           </div>
 
           <div>

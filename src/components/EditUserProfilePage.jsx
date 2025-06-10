@@ -17,6 +17,8 @@ function EditUserProfilePage() {
     const [bio, setBio] = useState('');
     const [location, setLocation] = useState('');
     const [websiteUrl, setWebsiteUrl] = useState('');
+    const [longitude, setLongitude] = useState('');
+    const [latitude, setLatitude] = useState('');
     // const [profilePictureUrl, setProfilePictureUrl] = useState(''); // Replaced by file state
     const [dateOfBirth, setDateOfBirth] = useState('');
 
@@ -32,6 +34,8 @@ function EditUserProfilePage() {
             setLocation(profile.location || '');
             setWebsiteUrl(profile.website_url || '');
             setDateOfBirth(profile.date_of_birth || '');
+            setLatitude(profile.latitude || '');
+            setLongitude(profile.longitude || '');
             setProfileImagePreview(profile.profile_picture_url || '');
         }
     }, [user]);
@@ -56,6 +60,8 @@ function EditUserProfilePage() {
             location,
             website_url: websiteUrl,
             date_of_birth: dateOfBirth,
+            latitude,
+            longitude,
             ...(profileImageFile && { profile_image: profileImageFile }),
         };
         try {
@@ -100,7 +106,7 @@ function EditUserProfilePage() {
     }
 
     return (
-        <div className="max-w-2xl mx-auto p-4 sm:p-6 lg:p-8">
+        <div className="max-w-4xl mx-auto p-4 mt-12 sm:p-6 lg:p-8">
             <div className="bg-white shadow-md rounded-lg p-8">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Edit Your Profile</h2>
 
@@ -159,6 +165,17 @@ function EditUserProfilePage() {
                         <input id="dateOfBirth" name="dateOfBirth" type="date"
                             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                             value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} />
+                    </div>
+                    <div>
+                        <label htmlFor="latitude" className="block text-sm font-medium text-gray-700">Latitude</label>
+                        <input id="latitude" name="latitude" type="number"
+                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                            value={latitude} onChange={(e) => setLatitude(e.target.value)} />
+                    </div> <div>
+                        <label htmlFor="longitude" className="block text-sm font-medium text-gray-700">Longitude</label>
+                        <input id="longitude" name="longitude" type="number"
+                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                            value={longitude} onChange={(e) => setLongitude(e.target.value)} />
                     </div>
 
 

@@ -5,6 +5,8 @@ import { fetchCampaigns } from '../services/apiService';
 import { startCase } from 'lodash';
 import clsx from 'clsx';
 import { toast } from 'react-toastify';
+import RecommendedCampaigns from './RecommendedCampaigns';
+import { useAuth } from '../context/AuthContext';
 
 // Memoized campaign card component to prevent unnecessary re-renders
 const CampaignCard = React.memo(({ campaign, calculatePercentage }) => (
@@ -95,6 +97,7 @@ function CampaignListPage() {
     const [campaigns, setCampaigns] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const { user, isLoading: authLoading } = useAuth();
 
     // Memoize the percentage calculation function to prevent recreation on each render
     const calculatePercentage = useCallback((current_amount, target_amount) => {
@@ -140,7 +143,7 @@ function CampaignListPage() {
 
     if (loading) {
         return (
-            <div className="container mx-auto px-4 py-12">
+            <div className="container mx-auto px-4  pt-24 pb-12">
                 <div className="mb-12">
                     <div className="h-12 bg-gray-200 rounded-lg animate-pulse mb-4 w-80"></div>
                     <div className="w-[27rem] h-1 bg-gray-200 rounded-full animate-pulse"></div>
@@ -188,7 +191,8 @@ function CampaignListPage() {
 
     // Main content
     return (
-        <div className="container mx-auto px-12 py-12">
+        <div className="container mx-auto px-12 pt-24 pb-12">
+            {user && <RecommendedCampaigns />}
             {memoizedCampaigns.length === 0 ? (
                 <div className="text-center py-20">
                     <div className="text-gray-400 text-6xl mb-4">📋</div>

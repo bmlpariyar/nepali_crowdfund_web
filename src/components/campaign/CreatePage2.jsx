@@ -29,7 +29,7 @@ const CreatePage2 = () => {
     <div className="min-h-screen flex bg-white text-gray-800">
       {/* Left Sidebar */}
       <div className="w-1/4 bg-gray-100 px-6 py-24 flex flex-col justify-center">
-        <div>
+        <div className="pl-8">
           <h1 className="text-2xl font-semibold mb-3">
             How much would you like to raise?
           </h1>
@@ -41,7 +41,7 @@ const CreatePage2 = () => {
       </div>
 
       {/* Right Content Area */}
-      <div className="w-3/4 px-12 py-24 bg-white flex flex-col justify-between">
+      <div className="w-3/4 px-12 py-28 bg-white flex flex-col justify-between">
         <div className="max-w-xl w-full mx-auto">
           <label className="block mb-2 text-gray-700 text-sm font-medium">
             Enter Target Amount (in NPR)

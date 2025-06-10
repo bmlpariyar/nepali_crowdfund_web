@@ -1,6 +1,6 @@
 // src/components/Navbar.js
 import React, { useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import logo from "../assets/images/sahayog_logo-red.png";
 import { Menu, X } from "lucide-react";
@@ -8,10 +8,24 @@ import { Menu, X } from "lucide-react";
 function Navbar() {
   const auth = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
+
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    const queryParams = new URLSearchParams();
+    if (searchQuery) {
+      queryParams.append("name", searchQuery)
+      navigate(`/search?${queryParams.toString()}`, { replace: true });
+      setSearchQuery("");
+    }
+
+  };
 
   if (auth?.isLoading) {
     return (
-      <nav className="fixed top-0 w-full z-50 bg-white/10 backdrop-blur-md border-b border-white/20 animate-pulse">
+      <nav className="fixed top-0 w-full z-100 bg-white/10 backdrop-blur-md border-b border-white/20 animate-pulse">
         <div className="container mx-auto h-6 bg-gray-300/50 rounded w-3/4 m-4"></div>
       </nav>
     );
@@ -25,7 +39,7 @@ function Navbar() {
   const navLinks = (
     <>
       <NavLink
-        to="/"
+        to="/campaigns"
         end
         className={({ isActive }) =>
           `${isActive ? activeClass : inactiveClass} text-sm font-medium `
@@ -49,7 +63,7 @@ function Navbar() {
   return (
     <nav className="fixed top-0 w-full z-50 bg-gradient-to-r from-gray-300/30 via-purple-300/80 to-rose-600/80 backdrop-blur-md border-b border-white/20 shadow-xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-16 gap-6">
           {/* Logo and Main Nav */}
           <div className="flex items-center space-x-8">
             <Link to="/" className="flex items-center space-x-2 group">
@@ -66,6 +80,16 @@ function Navbar() {
               {navLinks}
             </div>
           </div>
+
+          <form onSubmit={handleSearchSubmit} className="hidden md:flex w-full max-w-md mx-auto">
+            <input
+              type="text"
+              placeholder="Search campaigns..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-4 py-2 rounded-full bg-white/60 text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all"
+            />
+          </form>
 
           {/* Desktop Auth Section */}
           <div className="hidden md:flex items-center space-x-4">

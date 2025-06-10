@@ -27,7 +27,7 @@ const CreatePage4 = () => {
     <div className="min-h-screen flex bg-white text-gray-800">
       {/* Left Sidebar */}
       <div className="w-1/4 bg-gray-100 px-6 py-24 flex flex-col justify-center">
-        <div>
+        <div className="pl-8">
           <h1 className="text-2xl font-semibold mb-3">
             Tell us about your campaign
           </h1>
@@ -43,7 +43,7 @@ const CreatePage4 = () => {
       </div>
 
       {/* Right Content Area */}
-      <div className="w-3/4 px-12 py-24 flex flex-col justify-between bg-white">
+      <div className="w-3/4 px-12 py-28 flex flex-col justify-between bg-white">
         <div className="max-w-xl w-full mx-auto">
           {/* Title Input */}
           <div className="mb-8 relative">

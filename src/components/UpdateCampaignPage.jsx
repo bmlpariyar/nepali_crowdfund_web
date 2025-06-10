@@ -3,6 +3,46 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { fetchCampaignById, updateCampaignById, fetchCategories } from '../services/apiService';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
+import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import L from "leaflet";
+import { ca } from 'date-fns/locale';
+
+
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+    iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
+    iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
+    shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
+});
+
+
+
+const RecenterMap = ({ lat, lng }) => {
+    const map = useMapEvents({});
+
+    useEffect(() => {
+        if (lat && lng) {
+            map.setView([lat, lng], map.getZoom());
+        }
+    }, [lat, lng, map]);
+
+    return null;
+};
+
+const LocationMarker = ({ latitude, longitude, setLatitude, setLongitude }) => {
+    const [position, setPosition] = useState(latitude && longitude ? [latitude, longitude] : null);
+
+    useMapEvents({
+        click(e) {
+            const { lat, lng } = e.latlng;
+            setPosition([lat, lng]);
+            setLatitude(lat);
+            setLongitude(lng);
+        },
+    });
+
+    return position ? <Marker position={position} /> : null;
+};
 
 function UpdateCampaignPage() {
     const { id } = useParams();
@@ -13,6 +53,8 @@ function UpdateCampaignPage() {
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [imageUrl, setImageUrl] = useState("");
+    const [latitude, setLatitude] = useState(null);
+    const [longitude, setLongitude] = useState(null);
 
     const [error, setError] = useState(null);
     const [formData, setFormData] = useState({
@@ -23,6 +65,8 @@ function UpdateCampaignPage() {
         story: '',
         cover_image: imageUrl,
         video_url: '',
+        latitude: '',
+        longitude: '',
     });
 
     useEffect(() => {
@@ -44,6 +88,8 @@ function UpdateCampaignPage() {
                         story: campaignResponse.data.story || '',
                         cover_image: campaignResponse.data.cover_image || '',
                         video_url: campaignResponse.data.video_url || '',
+                        latitude: campaignResponse.data.latitude || '',
+                        longitude: campaignResponse.data.longitude || '',
                     });
                 } else {
                     setError('Failed to load campaign data.');
@@ -98,6 +144,8 @@ function UpdateCampaignPage() {
             data.append('campaign[deadline]', formData.deadline);
             data.append('campaign[story]', formData.story);
             data.append('campaign[video_url]', formData.video_url);
+            data.append('campaign[latitude]', formData.latitude);
+            data.append('campaign[longitude]', formData.longitude);
 
             if (formData.cover_image instanceof File) {
                 data.append('campaign[cover_image]', formData.cover_image);
@@ -121,7 +169,7 @@ function UpdateCampaignPage() {
     }
 
     return (
-        <div className="w-full mx-auto my-10 px-6 py-10 max-w-5xl shadow-2xl rounded-2xl bg-white animate-fade-in">
+        <div className="w-full mx-auto my-14 px-6 py-14 max-w-5xl shadow-2xl rounded-2xl bg-white animate-fade-in">
             <h2 className="text-3xl font-extrabold text-gray-800 mb-8 text-center">
                 Update Campaign
             </h2>
@@ -223,6 +271,44 @@ function UpdateCampaignPage() {
                         onChange={handleFileChange}
                         className="w-full px-5 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400"
                     />
+                </div>
+
+                <div className='relative z-0'>
+                    <MapContainer
+                        center={[
+                            formData.latitude || 27.7172, // fallback to Kathmandu if not set
+                            formData.longitude || 85.3240
+                        ]}
+                        zoom={10}
+                        scrollWheelZoom={true}
+                        className="h-96 w-full max-h-[400px] rounded-lg border border-gray-300 shadow-sm overflow-hidden"
+                    >
+                        <TileLayer
+                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
+                        />
+                        <LocationMarker
+                            latitude={formData.latitude}
+                            longitude={formData.longitude}
+                            setLatitude={(lat) => {
+                                setLatitude(lat);
+                                setFormData((prev) => ({ ...prev, latitude: lat }));
+                            }}
+                            setLongitude={(lng) => {
+                                setLongitude(lng);
+                                setFormData((prev) => ({ ...prev, longitude: lng }));
+                            }}
+                        />
+                        <RecenterMap lat={formData.latitude} lng={formData.longitude} />
+                    </MapContainer>
+                    {formData.latitude && formData.longitude && (
+                        <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                            <p className="text-sm text-green-800">
+                                <span className="font-medium">Selected Coordinates:</span>{" "}
+                                <strong>{formData.latitude.toFixed(5)}, {formData.longitude.toFixed(5)}</strong>
+                            </p>
+                        </div>
+                    )}
                 </div>
 
                 {/* Video URL */}

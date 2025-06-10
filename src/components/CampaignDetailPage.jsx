@@ -1,5 +1,5 @@
 // src/components/CampaignDetailPage.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { fetchCampaignById, makeDonation } from '../services/apiService';
 import { useAuth } from '../context/AuthContext';
@@ -13,6 +13,7 @@ import ShareModal from './donation/ShareModal';
 import Button from './ui/Button';
 import AlertModal from './modals/AlertModal';
 import { toast } from 'react-toastify';
+import { logCampaignView } from '../services/apiService';
 
 const calculateProgress = (current, goal) => {
     if (!goal || goal <= 0 || !current || current <= 0) {
@@ -36,6 +37,7 @@ function CampaignDetailPage() {
     const [showShareModal, setShowShareModal] = useState(false);
     const [showAlert, setShowAlert] = useState(false);
     const navigate = useNavigate();
+    const hasLoggedViewRef = useRef(false);
 
 
     const handleDonationSuccess = () => {
@@ -45,6 +47,16 @@ function CampaignDetailPage() {
     const handleUpdateMessageSuccess = () => {
         setUpdateRefreshKey(prev => prev + 1); // triggers CampaignStatusUpdate to refresh
     };
+
+    useEffect(() => {
+        if (user && campaignId && !hasLoggedViewRef.current) {
+            hasLoggedViewRef.current = true;
+            logCampaignView(campaignId).catch(err => {
+                console.log("Note: Could not log view, might be a duplicate.", err);
+            });
+        }
+    }, [user, campaignId]);
+
 
     useEffect(() => {
         if (!campaignId) {
@@ -157,7 +169,7 @@ function CampaignDetailPage() {
     const deadlineDate = campaign.deadline ? new Date(campaign.deadline).toLocaleDateString() : 'N/A';
 
     return (
-        <div className=" bg-white container mx-auto px-4 py-8 max-w-7xl">
+        <div className=" bg-white container mx-auto px-4 pt-24 pb-12 max-w-7xl">
             <Link
                 to="/campaigns"
                 className="text-sm text-indigo-600 hover:text-indigo-800 mb-6 inline-block"

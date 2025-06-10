@@ -45,14 +45,16 @@ const CreatePage3 = () => {
     <div className="min-h-screen flex bg-white text-gray-800">
       {/* Left Sidebar */}
       <div className="w-1/4 bg-gray-100 px-6 py-24 flex flex-col justify-center">
-        <h1 className="text-2xl font-semibold mb-3">Upload Cover Image</h1>
-        <p className="text-gray-600 text-sm">
-          Upload a photo that best represents your campaign.
-        </p>
+        <div className="pl-8">
+          <h1 className="text-2xl font-semibold mb-3">Upload Cover Image</h1>
+          <p className="text-gray-600 text-sm">
+            Upload a photo that best represents your campaign.
+          </p>
+        </div>
       </div>
 
       {/* Right Content */}
-      <div className="w-3/4 px-12 py-24 bg-white flex flex-col justify-between">
+      <div className="w-3/4 px-12 py-28 bg-white flex flex-col justify-between">
         <div className="max-w-4xl w-full mx-auto">
           <label className="block mb-4 text-lg font-semibold">
             Cover Image (JPEG/PNG)
