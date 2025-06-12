@@ -7,16 +7,17 @@ import clsx from 'clsx';
 import { toast } from 'react-toastify';
 import RecommendedCampaigns from './RecommendedCampaigns';
 import { useAuth } from '../context/AuthContext';
+import Pagination from './ui/Pagination';
 
-// Memoized campaign card component to prevent unnecessary re-renders
+// No changes to CampaignCard
 const CampaignCard = React.memo(({ campaign, calculatePercentage }) => (
     <Link to={`/campaigns/${campaign.id}`}>
         <div
-            className="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 ease-out transform hover:-translate-y-2 border border-white/20 overflow-hidden animate-slide-up"
+            className="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 ease-out transform hover:-translate-y-2 border border-white/20 overflow-hidden "
         >
             <div className="relative overflow-hidden">
                 <img
-                    src={campaign.cover_image_url || 'https://placehold.co/400x240/98a9d6/ffffff?text=No+Image'}
+                    src={campaign.cover_image_url || 'https://placehold.co/400x240/d93b67/ffffff?text=No+Image'}
                     alt="Campaign Cover"
                     className="w-full h-60 object-cover transition-transform duration-700 group-hover:scale-110"
                     loading="lazy"
@@ -35,7 +36,6 @@ const CampaignCard = React.memo(({ campaign, calculatePercentage }) => (
                 </div>
                 <div className="absolute top-4 left-4">
                     <span className={clsx(
-
                         'bg-indigo-400/80 text-white px-2 py-1 rounded-full text-xs font-medium shadow-lg'
                     )}>
                         {startCase(campaign.category.name)}
@@ -70,7 +70,6 @@ const CampaignCard = React.memo(({ campaign, calculatePercentage }) => (
                         </div>
                     </div>
 
-                    {/* Progress bar */}
                     <div className="relative">
                         <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
                             <div
@@ -93,55 +92,84 @@ const CampaignCard = React.memo(({ campaign, calculatePercentage }) => (
     </Link>
 ));
 
+// New Pagination Component
+
+
+
 function CampaignListPage() {
     const [campaigns, setCampaigns] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const { user, isLoading: authLoading } = useAuth();
+    // Initialize pagination state
+    const [pagination, setPagination] = useState({
+        current_page: 1,
+        total_pages: 1,
+        total_count: 0,
+        per_page: 9,
+    });
 
-    // Memoize the percentage calculation function to prevent recreation on each render
     const calculatePercentage = useCallback((current_amount, target_amount) => {
         if (!target_amount || target_amount === 0) return 0;
         return Math.min((current_amount / target_amount) * 100, 100);
     }, []);
 
-    // Memoize campaigns to prevent unnecessary recalculations
     const memoizedCampaigns = useMemo(() => campaigns, [campaigns]);
 
+    // Get current page from state
+    const currentPage = pagination.current_page;
+
     useEffect(() => {
-        const loadCampaigns = async () => {
+        const loadCampaigns = async (page) => {
             try {
                 setLoading(true);
                 setError(null);
 
-                // Add timeout to handle slow API responses
                 const timeoutPromise = new Promise((_, reject) =>
                     setTimeout(() => reject(new Error('Request timeout')), 10000)
                 );
-
                 const response = await Promise.race([
-                    fetchCampaigns(),
+                    fetchCampaigns(page),
                     timeoutPromise
                 ]);
 
-                setCampaigns(Array.isArray(response.data) ? response.data : []);
+                setCampaigns(Array.isArray(response.data.campaigns) ? response.data.campaigns : []);
+                // Set the pagination data from the API response
+                setPagination(response.data.pagination);
             } catch (err) {
                 console.error("Error fetching campaigns:", err);
                 const errorMessage = err.message === 'Request timeout'
                     ? 'Request timed out. Please check your connection and try again.'
                     : `Failed to load campaigns. ${err.message || 'Please try again later.'}`;
                 setError(errorMessage);
-
                 toast.error(errorMessage);
             } finally {
                 setLoading(false);
             }
         };
 
-        loadCampaigns();
-    }, []);
+        loadCampaigns(currentPage);
+    }, [currentPage]); // Re-run the effect when currentPage changes
+
+    // Handler to update the current page
+    const handlePageChange = (page) => {
+        setPagination(prevPagination => ({
+            ...prevPagination,
+            current_page: page,
+        }));
+        // Optional: Scroll to top when changing pages
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth',
+        });
+    };
+
+    const recommendedSection = useMemo(() => {
+        return user ? <RecommendedCampaigns /> : null;
+    }, [user]);
 
     if (loading) {
+        // No changes to loading skeleton
         return (
             <div className="container mx-auto px-4  pt-24 pb-12">
                 <div className="mb-12">
@@ -171,7 +199,7 @@ function CampaignListPage() {
         );
     }
 
-    // Error state without toast (already shown in useEffect)
+    // No changes to error state
     if (error) {
         return (
             <div className="flex flex-col justify-center items-center h-screen">
@@ -189,10 +217,10 @@ function CampaignListPage() {
         );
     }
 
-    // Main content
+    // Main content with Pagination component added
     return (
         <div className="container mx-auto px-12 pt-24 pb-12">
-            {user && <RecommendedCampaigns />}
+            {recommendedSection}
             {memoizedCampaigns.length === 0 ? (
                 <div className="text-center py-20">
                     <div className="text-gray-400 text-6xl mb-4">📋</div>
@@ -200,15 +228,37 @@ function CampaignListPage() {
                     <p className="text-gray-400">Check back later for new campaigns</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-                    {memoizedCampaigns.map((campaign) => (
-                        <CampaignCard
-                            key={campaign.id}
-                            campaign={campaign}
-                            calculatePercentage={calculatePercentage}
+                <>
+                    <div className='flex justify-between p-3 mb-5 rounded-lg items-center w-full  bg-gray-400/10'>
+                        <div className="text-gray-500 text-lg font-semibold">
+                            Page {pagination.current_page} of {pagination.total_pages}
+                        </div>
+                        <Pagination
+                            pagination={pagination}
+                            onPageChange={handlePageChange}
                         />
-                    ))}
-                </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+                        {memoizedCampaigns.map((campaign) => (
+                            <CampaignCard
+                                key={campaign.id}
+                                campaign={campaign}
+                                calculatePercentage={calculatePercentage}
+                            />
+                        ))}
+                    </div>
+
+                    {/* Render the Pagination component */}
+                    <div className='flex justify-between p-3 mt-5 rounded-lg items-center w-full  bg-gray-400/10'>
+                        <div className="text-gray-500 text-lg font-semibold">
+                            Page {pagination.current_page} of {pagination.total_pages}
+                        </div>
+                        <Pagination
+                            pagination={pagination}
+                            onPageChange={handlePageChange}
+                        />
+                    </div>
+                </>
             )}
         </div>
     );

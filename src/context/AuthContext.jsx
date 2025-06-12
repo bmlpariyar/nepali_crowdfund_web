@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loginUser, registerUser, fetchUserProfile } from '../services/apiService';
 
@@ -120,7 +120,8 @@ export const AuthProvider = ({ children }) => {
         });
     };
 
-    const value = { user, token, isLoading, login, register, logout, updateUserProfileLocally, refreshUser, forceRefreshUser };
+    const value = useMemo(() => (
+        { user, token, isLoading, login, register, logout, updateUserProfileLocally, refreshUser, forceRefreshUser }), [user, isLoading, token, login, register, logout, updateUserProfileLocally, refreshUser, forceRefreshUser]);
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

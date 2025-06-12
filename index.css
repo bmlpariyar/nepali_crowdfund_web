@@ -6,6 +6,8 @@
     --animate-pulse-glow: pulseGlow 1.2s ease-in-out infinite alternate;
     --animate-float: float 6s ease-in-out infinite;
     --animate-swipe-light: swipe-light 2s ease-in-out infinite;
+    --animate-fade-slide-down: fade-slide-down 0.5s ease-out;
+    --animate-fade-slide-up: fade-slide-up 0.4s ease-in;
 
     @keyframes fade-in {
         0% {
@@ -68,4 +70,68 @@
             box-shadow: 0 0 40px rgba(99, 102, 241, 0.8);
         }
     }
+
+    @keyframes fade-slide-down {
+        0% {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes fade-slide-up {
+        0% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        100% {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+    }
+
+}
+
+.slick-dots li button:before {
+    font-size: 14px !important;
+    width: 20px !important;
+    height: 20px !important;
+    color: #e42d46b9 !important;
+}
+
+.slick-dots li {
+    width: 30px !important;
+    height: 30px !important;
+}
+
+.slick-dots {
+    bottom: -16px !important;
+}
+
+.slick-prev,
+.slick-next {
+    background-color: #8d8ee8b9 !important;
+    width: 30px !important;
+    height: 30px !important;
+    z-index: 10;
+    border-radius: 9999px;
+}
+
+.slick-prev:before,
+.slick-next:before {
+    font-size: 16px;
+    color: white;
+}
+
+.slick-prev {
+    left: -4px !important;
+}
+
+.slick-next {
+    right: -4px !important;
 }

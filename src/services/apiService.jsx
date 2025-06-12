@@ -32,7 +32,7 @@ apiClient.interceptors.request.use(
 );
 
 // --- Campaign Functions ---
-export const fetchCampaigns = () => apiClient.get("/campaigns");
+export const fetchCampaigns = (page) => apiClient.get("/campaigns", { params: { page } });
 // Use ID instead of Slug
 export const fetchCampaignById = (id) => apiClient.get(`/campaigns/${id}`);
 export const fetchCategories = () => apiClient.get("/categories");
