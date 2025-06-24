@@ -43,7 +43,7 @@ const HeroSection = () => {
     };
 
     return (
-        <section className="relative py-20 overflow-hidden mt-12">
+        <section className="overflow-hidden mt-12">
             <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-purple-500/10"></div>
             <div className="container mx-auto px-4 relative z-10">
                 <div className="text-center max-w-4xl mx-auto animate-fade-in">

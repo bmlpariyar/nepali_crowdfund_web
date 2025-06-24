@@ -171,7 +171,7 @@ function CampaignListPage() {
     if (loading) {
         // No changes to loading skeleton
         return (
-            <div className="container mx-auto px-4  pt-24 pb-12">
+            <div className="container mx-auto px-4 pb-12">
                 <div className="mb-12">
                     <div className="h-12 bg-gray-200 rounded-lg animate-pulse mb-4 w-80"></div>
                     <div className="w-[27rem] h-1 bg-gray-200 rounded-full animate-pulse"></div>
@@ -219,7 +219,7 @@ function CampaignListPage() {
 
     // Main content with Pagination component added
     return (
-        <div className="container mx-auto px-12 pt-24 pb-12">
+        <div className="container mx-auto px-12 pt-5 pb-12">
             {recommendedSection}
             {memoizedCampaigns.length === 0 ? (
                 <div className="text-center py-20">
@@ -229,7 +229,7 @@ function CampaignListPage() {
                 </div>
             ) : (
                 <>
-                    <div className='flex justify-between p-3 mb-5 rounded-lg items-center w-full  bg-gray-400/10'>
+                    <div className='flex justify-between p-3 mb-5 rounded-lg mt-4 items-center w-full  bg-gray-400/10'>
                         <div className="text-gray-500 text-lg font-semibold">
                             Page {pagination.current_page} of {pagination.total_pages}
                         </div>

@@ -5,7 +5,7 @@ import Footer from './Footer'
 
 const LandingPage = () => {
     return (
-        <div >
+        <div>
             <HeroSection />
             <ArticleSection />
             <Footer />

@@ -19,7 +19,6 @@ apiClient.interceptors.request.use(
   (config) => {
     const token = getAuthToken();
     if (token) {
-      // Add Authorization header, skip for login/register paths
       if (!config.url.endsWith("/login") && !config.url.endsWith("/users")) {
         config.headers["Authorization"] = `Bearer ${token}`;
       }
@@ -239,3 +238,22 @@ export const fetchLocation = (lat, lng) => {
   });
 };
 
+
+// ====================Admin Service=============
+export const adminFetchUsers = () => { return apiClient.get('/admin/users/'); };
+export const getUserCountDetails = () => {
+  return apiClient.get('/api/v1/dashboard/user_count_details');
+}
+
+export const getWeeklyCampaignActivities = () => {
+  return apiClient.get('/api/v1/dashboard/get_weekly_campaign_activities');
+}
+export const getCategoryCampaignDetails = () => {
+  return apiClient.get('/api/v1/dashboard/get_category_campaign_details');
+}
+
+
+// ====================aiService=============
+export const analyzeStory = (text) => {
+  return apiClient.post('/ai_assistant/analyze', { text });
+};

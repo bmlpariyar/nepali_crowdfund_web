@@ -77,7 +77,7 @@ const RecommendedCampaigns = () => {
     };
 
     return (
-        <div className="my-12 bg-indigo-400/20 rounded-2xl p-2">
+        <div className=" bg-indigo-400/20 rounded-2xl p-2">
             <h2 className="text-2xl text-gray-600 font-bold mb-4 ml-2">Recommended For You</h2>
             <Slider
                 className='bg-transparent rounded-lg p-2 arrow'

@@ -98,7 +98,7 @@ const ArticleSection = () => {
     }
 
     return (
-        <section className="py-20 bg-white/50 backdrop-blur-sm">
+        <section className=" bg-white/50 backdrop-blur-sm">
             <div className="container mx-auto px-4">
                 <div className="text-center mb-16">
                     <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent mb-6">

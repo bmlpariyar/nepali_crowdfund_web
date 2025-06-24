@@ -21,6 +21,10 @@ import SearchMain from "./components/search/SearchMain";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import 'leaflet/dist/leaflet.css';
+import AdminRoute from "./components/AdminRoute";
+import AdminLayout from "./components/admin/AdminLayout";
+import AdminDashboard from "./components/admin/AdminDashboard";
+import AdminUserListPage from "./components/admin/AdminUserListPage";
 
 import LocationHandler from "./components/LocationHandler";
 
@@ -40,7 +44,7 @@ function App() {
         draggable
         pauseOnHover
       />
-      <div className="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 min-h-screen ">
+      <div className="pt-16 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 min-h-screen ">
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/campaigns" element={<CampaignListPage />} />
@@ -146,6 +150,19 @@ function App() {
           />
 
           {/* ======================================================================== */}
+          {/* =============================Admin Routes=============================== */}
+          {/* --- Admin Routes --- */}
+          <Route path="/admin" element={
+            <AdminRoute>
+              <AdminLayout />
+            </AdminRoute>
+          }>
+            {/* Nested routes will render inside AdminLayout's <Outlet /> */}
+            <Route index element={<AdminDashboard />} />
+            <Route path="users" element={<AdminUserListPage />} />
+            {/* <Route path="users/:id" element={<AdminUserDetailPage />} /> */}
+            {/* <Route path="campaigns" element={<AdminCampaignListPage />} /> */}
+          </Route>
         </Routes>
       </div>
     </div>

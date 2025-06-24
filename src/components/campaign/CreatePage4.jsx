@@ -1,14 +1,20 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useCampaign } from "../../context/CampaignContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { analyzeStory } from "../../services/apiService";
+import { useDebounce } from "../../hooks/useDebounce";
 
 const CreatePage4 = () => {
   const [title, setTitle] = useState("");
   const [story, setStory] = useState("");
   const { campaignData, updateCampaign } = useCampaign();
   const navigate = useNavigate();
+
+  const [suggestions, setSuggestions] = useState([]);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const debouncedStory = useDebounce(story, 1500);
 
   useEffect(() => {
     if (campaignData.title) setTitle(campaignData.title);
@@ -23,10 +29,26 @@ const CreatePage4 = () => {
     navigate("/create/campaign/preview");
   };
 
+  useEffect(() => {
+    if (debouncedStory) { // Only run if there is text
+      setIsAnalyzing(true);
+      analyzeStory(debouncedStory)
+        .then(response => {
+          setSuggestions(response.data.suggestions);
+        })
+        .catch(error => {
+          console.error("AI analysis error:", error);
+        })
+        .finally(() => {
+          setIsAnalyzing(false);
+        });
+    }
+  }, [debouncedStory]);
+
   return (
     <div className="min-h-screen flex bg-white text-gray-800">
       {/* Left Sidebar */}
-      <div className="w-1/4 bg-gray-100 px-6 py-24 flex flex-col justify-center">
+      <div className="w-1/4 bg-gray-100 px-6  flex flex-col justify-center">
         <div className="pl-8">
           <h1 className="text-2xl font-semibold mb-3">
             Tell us about your campaign
@@ -43,7 +65,7 @@ const CreatePage4 = () => {
       </div>
 
       {/* Right Content Area */}
-      <div className="w-3/4 px-12 py-28 flex flex-col justify-between bg-white">
+      <div className="w-3/4 px-12 py-8  flex flex-col justify-between bg-white">
         <div className="max-w-xl w-full mx-auto">
           {/* Title Input */}
           <div className="mb-8 relative">
@@ -78,6 +100,24 @@ const CreatePage4 = () => {
                 updateCampaign({ story: value });
               }}
             />
+            {isAnalyzing && <span className="absolute bottom-3 right-3 text-sm text-gray-500">Analyzing...</span>}
+          </div>
+          <div className="mt-4 p-4 bg-indigo-50 border border-indigo-200 rounded-lg">
+            <h4 className="font-bold text-indigo-800">Storytelling Assistant</h4>
+            <ul className="mt-2 list-inside">
+              {suggestions.map(suggestion => (
+                <li key={suggestion.id} className="flex items-center text-sm">
+                  {suggestion.complete ? (
+                    <span className="text-green-500 mr-2">✔️</span>
+                  ) : (
+                    <span className="text-yellow-500 mr-2">⚠️</span>
+                  )}
+                  <span className={suggestion.complete ? 'text-gray-600' : 'text-gray-800 font-semibold'}>
+                    {suggestion.text}
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
 

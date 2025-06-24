@@ -103,7 +103,7 @@ const CreatePage1 = () => {
   return (
     <div className="min-h-screen flex bg-white text-gray-800">
       {/* Left Sidebar */}
-      <div className="w-1/4 bg-gray-100 px-6 py-24 flex flex-col justify-center">
+      <div className="w-1/4 bg-gray-100 px-6  flex flex-col justify-center">
         <div className="pl-8">
           <h1 className="text-2xl font-semibold mb-3">
             Let's begin your fundraising journey
@@ -115,7 +115,7 @@ const CreatePage1 = () => {
       </div>
 
       {/* Right Content Area */}
-      <div className="z-10 w-3/4 px-12 py-28 flex flex-col justify-between bg-white overflow-x-hidden">
+      <div className="z-10 w-3/4 px-12 py-8 flex flex-col justify-between bg-white overflow-x-hidden">
         <div className="max-w-2xl w-full mx-auto">
           {/* Location Selection */}
           <div className="mb-10">
