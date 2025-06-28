@@ -14,6 +14,7 @@ import Button from './ui/Button';
 import AlertModal from './modals/AlertModal';
 import { toast } from 'react-toastify';
 import { logCampaignView } from '../services/apiService';
+import ChatWidget from './modals/ChatWidget';
 
 const calculateProgress = (current, goal) => {
     if (!goal || goal <= 0 || !current || current <= 0) {
@@ -36,6 +37,7 @@ function CampaignDetailPage() {
     const [updateRefreshKey, setUpdateRefreshKey] = useState(0);
     const [showShareModal, setShowShareModal] = useState(false);
     const [showAlert, setShowAlert] = useState(false);
+    const [contactModalOpen, setContactModalOpen] = useState(false);
     const navigate = useNavigate();
     const hasLoggedViewRef = useRef(false);
 
@@ -371,7 +373,9 @@ function CampaignDetailPage() {
                                     <div className="text-sm text-gray-600">Organizer</div>
                                 </div>
                             </div>
-                            <Button gradientStart='from-gray-400'
+                            <Button
+                                onClick={() => setContactModalOpen(true)}
+                                gradientStart='from-gray-400'
                                 gradientEnd='to-gray-400'
                             >
                                 Contact
@@ -417,8 +421,12 @@ function CampaignDetailPage() {
                 onConfirm={handleDelete}
                 onCancel={() => setShowAlert(false)} />
 
-
-
+            {user && (
+                <ChatWidget
+                    campaignId={campaign.id}
+                    currentUser={user}
+                    isCreator={campaign?.user?.id === user?.id} />
+            )}
         </div>
     );
 }

@@ -252,8 +252,27 @@ export const getCategoryCampaignDetails = () => {
   return apiClient.get('/api/v1/dashboard/get_category_campaign_details');
 }
 
+export const getRecentCampaigns = () => {
+  return apiClient.get('/api/v1/dashboard/get_recent_campaigns');
+}
+
 
 // ====================aiService=============
 export const analyzeStory = (text) => {
   return apiClient.post('/ai_assistant/analyze', { text });
+};
+
+
+// ====================chat message==================
+export const fetchChatMessages = (campaignId) => {
+  return apiClient.get(`/api/v1/campaigns/${campaignId}/chat_messages`);
+
+}
+
+export const postChatMessage = (campaignId, message) => {
+  return apiClient.post(`/api/v1/campaigns/${campaignId}/chat_messages`, { chat_message: message });
+};
+
+export const markMessagesAsRead = (campaignId) => {
+  return apiClient.post(`/api/v1/campaigns/${campaignId}/chat_messages/mark_as_read`);
 };

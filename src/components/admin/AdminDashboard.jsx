@@ -1,20 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { getWeeklyCampaignActivities, getCategoryCampaignDetails } from '../../services/apiService';
+import { useNavigate } from 'react-router-dom';
+import { getWeeklyCampaignActivities, getCategoryCampaignDetails, getRecentCampaigns } from '../../services/apiService';
 
 import {
     DollarSign,
     Users,
     Target,
-    TrendingUp,
-    Calendar,
     Award,
-    Activity,
     ArrowUpRight,
     ArrowDownRight,
-    MoreHorizontal,
-    Send
 } from 'lucide-react';
-import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const balanceHistory = [
     { month: 'Jan', amount: 45000 },
@@ -26,31 +22,21 @@ const balanceHistory = [
     { month: 'Jul', amount: 72000 }
 ];
 
-const recentCampaigns = [
-    { id: 1, title: "Smart Home Device", creator: "Tech Innovations", amount: 85000, target: 100000, backers: 342, category: "Technology", status: "active" },
-    { id: 2, title: "Artisan Coffee Roaster", creator: "Bean Masters", amount: 23500, target: 30000, backers: 156, category: "Food", status: "active" },
-    { id: 3, title: "Indie Game Project", creator: "Pixel Studios", amount: 67000, target: 50000, backers: 892, category: "Games", status: "successful" }
-];
-
-const topCreators = [
-    { name: "Sarah Johnson", role: "Tech Entrepreneur", avatar: "👩‍💼", campaigns: 3, totalRaised: 245000 },
-    { name: "Mike Chen", role: "Game Developer", avatar: "👨‍💻", campaigns: 2, totalRaised: 189000 },
-    { name: "Emma Wilson", role: "Artist", avatar: "👩‍🎨", campaigns: 4, totalRaised: 156000 }
-];
-
 function AdminDashboard() {
-    const [transferAmount, setTransferAmount] = useState('');
-    const [selectedCreator, setSelectedCreator] = useState(0);
     const [weeklyActivities, setWeeklyActivities] = useState([]);
     const [categoryData, setCategoryData] = useState([]);
+    const [recentCampaignsData, setRecentCampaignsData] = useState([]);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchWeeklyActivities = async () => {
             try {
                 const weekly_data = await getWeeklyCampaignActivities();
                 const category_data = await getCategoryCampaignDetails();
+                const recent_campaigns_data = await getRecentCampaigns();
                 setCategoryData(category_data.data);
                 setWeeklyActivities(weekly_data.data);
+                setRecentCampaignsData(recent_campaigns_data.data);
             } catch (error) {
                 console.error("Error fetching weekly activities:", error);
             }
@@ -72,7 +58,7 @@ function AdminDashboard() {
                 {/* Total Funds Raised */}
                 <div className="bg-gradient-to-br from-purple-600 to-purple-700 rounded-xl p-6 text-white shadow-md border border-purple-500">
                     <div className="flex items-center justify-between mb-4">
-                        <div className="p-2 bg-red-300 bg-opacity-20 rounded-lg">
+                        <div className="p-2 bg-red-300/90 bg-opacity-20 rounded-lg">
                             <DollarSign className="w-6 h-6" />
                         </div>
                         <div className="text-right">
@@ -273,51 +259,6 @@ function AdminDashboard() {
                             </ResponsiveContainer>
                         </div>
                     </div>
-
-                    {/* Quick Actions */}
-                    <div className="bg-white rounded-xl p-6 shadow-md border border-gray-100">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-6">Top Creators</h3>
-                        <div className="space-y-4">
-                            {topCreators.map((creator, index) => (
-                                <div
-                                    key={index}
-                                    className={`flex items-center p-3 rounded-lg cursor-pointer transition-colors ${selectedCreator === index ? 'bg-purple-50 border-purple-200' : 'hover:bg-gray-50'
-                                        }`}
-                                    onClick={() => setSelectedCreator(index)}
-                                >
-                                    <div className="text-2xl mr-3">{creator.avatar}</div>
-                                    <div className="flex-1">
-                                        <div className="font-semibold text-gray-900">{creator.name}</div>
-                                        <div className="text-sm text-gray-500">{creator.role}</div>
-                                        <div className="text-xs text-gray-400">
-                                            {creator.campaigns} campaigns • Rs. {creator.totalRaised.toLocaleString()} raised
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className="mt-6 pt-4 border-t border-gray-200">
-                            <div className="flex items-center justify-between mb-3">
-                                <label className="text-sm font-medium text-gray-700">Send Message</label>
-                                <button className="text-purple-600 hover:text-purple-700">
-                                    <MoreHorizontal className="w-4 h-4" />
-                                </button>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <input
-                                    type="text"
-                                    placeholder="Type message..."
-                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                                    value={transferAmount}
-                                    onChange={(e) => setTransferAmount(e.target.value)}
-                                />
-                                <button className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center">
-                                    <Send className="w-4 h-4" />
-                                </button>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -326,7 +267,9 @@ function AdminDashboard() {
                 <div className="px-6 py-4 border-b border-gray-200">
                     <div className="flex items-center justify-between">
                         <h3 className="text-lg font-semibold text-gray-900">Recent Campaigns</h3>
-                        <button className="text-purple-600 hover:text-purple-700 text-sm font-medium">
+                        <button
+                            onClick={() => navigate('/campaigns')}
+                            className="text-purple-600 hover:text-purple-700 text-sm font-medium">
                             See All
                         </button>
                     </div>
@@ -344,27 +287,27 @@ function AdminDashboard() {
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {recentCampaigns.map((campaign) => (
+                            {recentCampaignsData.map((campaign) => (
                                 <tr key={campaign.id} className="hover:bg-gray-50">
                                     <td className="px-6 py-4">
                                         <div>
                                             <div className="font-medium text-gray-900">{campaign.title}</div>
-                                            <div className="text-sm text-gray-500">{campaign.category}</div>
+                                            <div className="text-sm text-gray-500">{campaign.category?.name}</div>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 text-sm text-gray-900">{campaign.creator}</td>
+                                    <td className="px-6 py-4 text-sm text-gray-900">{campaign.user?.full_name}</td>
                                     <td className="px-6 py-4">
                                         <div className="text-sm text-gray-900">
-                                            Rs {campaign.amount.toLocaleString()} / Rs.{campaign.target.toLocaleString()}
+                                            Rs {campaign.current_amount.toLocaleString()} / Rs.{campaign.funding_goal.toLocaleString()}
                                         </div>
                                         <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
                                             <div
                                                 className="bg-purple-600 h-2 rounded-full"
-                                                style={{ width: `${Math.min((campaign.amount / campaign.target) * 100, 100)}%` }}
+                                                style={{ width: `${Math.min((campaign.current_amount / campaign.funding_goal) * 100, 100)}%` }}
                                             ></div>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 text-sm text-gray-900">{campaign.backers}</td>
+                                    <td className="px-6 py-4 text-sm text-gray-900">{campaign.total_donations}</td>
                                     <td className="px-6 py-4">
                                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${campaign.status === 'successful'
                                             ? 'bg-green-100 text-green-800'
@@ -374,7 +317,7 @@ function AdminDashboard() {
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 text-right text-sm font-medium">
-                                        <button className="text-purple-600 hover:text-purple-900">View</button>
+                                        <button onClick={() => navigate(`/campaigns/${campaign.id}`)} className="text-purple-600 hover:text-purple-900">View</button>
                                     </td>
                                 </tr>
                             ))}

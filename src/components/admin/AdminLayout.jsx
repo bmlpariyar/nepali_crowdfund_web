@@ -6,17 +6,12 @@ import {
     Users,
     Target,
     TrendingUp,
-    Settings,
     Bell,
     Search,
     Menu,
     X,
     LogOut,
     User,
-    CreditCard,
-    BarChart3,
-    Shield,
-    HelpCircle
 } from 'lucide-react';
 
 function AdminLayout() {
@@ -24,18 +19,12 @@ function AdminLayout() {
     const { user } = useAuth();
     const navigation = [
         { name: 'Dashboard', href: '/admin', icon: LayoutDashboard, end: true },
-        { name: 'Users', href: '/admin/users', icon: Users, badge: '12' },
-        { name: 'Campaigns', href: '/admin/campaigns', icon: Target, badge: '324' },
-        { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
-        { name: 'Transactions', href: '/admin/transactions', icon: CreditCard },
-        { name: 'Reports', href: '/admin/reports', icon: TrendingUp }
+        { name: 'Users', href: '/admin/users', icon: Users },
+        { name: 'Campaigns', href: '#', icon: Target, badge: '0' },
+        { name: 'Reports', href: '#', icon: TrendingUp }
     ];
 
-    const bottomNavigation = [
-        { name: 'Settings', href: '/admin/settings', icon: Settings },
-        { name: 'Security', href: '/admin/security', icon: Shield },
-        { name: 'Help & Support', href: '/admin/help', icon: HelpCircle }
-    ];
+
 
     const NavItem = ({ item, mobile = false }) => (
         <NavLink
@@ -60,7 +49,7 @@ function AdminLayout() {
     );
 
     return (
-        <div className="flex h-screen bg-gray-50">
+        <div className="flex max-h-screen bg-gray-50">
             {sidebarOpen && (
                 <div
                     className="fixed inset-0 bg-gray-600 bg-opacity-50 z-20 lg:hidden"
@@ -118,12 +107,7 @@ function AdminLayout() {
                             <div className="border-t border-white/60" />
                         </div>
 
-                        {/* Bottom Navigation */}
-                        <div className="space-y-1">
-                            {bottomNavigation.map((item) => (
-                                <NavItem key={item.name} item={item} />
-                            ))}
-                        </div>
+
                     </nav>
 
                     {/* Footer */}
