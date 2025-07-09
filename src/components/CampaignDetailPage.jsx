@@ -1,7 +1,7 @@
 // src/components/CampaignDetailPage.js
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { fetchCampaignById, makeDonation } from '../services/apiService';
+import { fetchCampaignById, makeDonation, getEstimationData } from '../services/apiService';
 import { useAuth } from '../context/AuthContext';
 import { deleteCampaignById } from '../services/apiService';
 import DonationModal from './donation/DonationModal';
@@ -37,7 +37,7 @@ function CampaignDetailPage() {
     const [updateRefreshKey, setUpdateRefreshKey] = useState(0);
     const [showShareModal, setShowShareModal] = useState(false);
     const [showAlert, setShowAlert] = useState(false);
-    const [contactModalOpen, setContactModalOpen] = useState(false);
+    const [estimationData, setEstimationData] = useState({});
     const navigate = useNavigate();
     const hasLoggedViewRef = useRef(false);
 
@@ -50,6 +50,17 @@ function CampaignDetailPage() {
         setUpdateRefreshKey(prev => prev + 1); // triggers CampaignStatusUpdate to refresh
     };
 
+
+    useEffect(() => {
+        getEstimationData(campaignId)
+            .then(response => {
+                setEstimationData(response.data);
+            })
+            .catch(err => {
+                console.error("Error fetching estimation data:", err);
+            });
+    }, [campaignId]);
+
     useEffect(() => {
         if (user && campaignId && !hasLoggedViewRef.current) {
             hasLoggedViewRef.current = true;
@@ -58,6 +69,7 @@ function CampaignDetailPage() {
             });
         }
     }, [user, campaignId]);
+
 
 
     useEffect(() => {
@@ -267,8 +279,8 @@ function CampaignDetailPage() {
                         </div>
                         <h2 className="text-2xl font-semibold text-gray-900 mb-6">Our Story</h2>
 
-                        <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed space-y-4">
-                            <p>{campaign.story}</p>
+                        <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed space-y-4" dangerouslySetInnerHTML={{ __html: campaign.story }}>
+
                         </div>
                     </div>
 
@@ -360,27 +372,47 @@ function CampaignDetailPage() {
                         <RecentDonations campaignId={campaign.id} refreshTrigger={messageRefreshKey} />
 
 
-                        {/* <!-- Organizer Info --> */}
-                        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                            <h3 className="font-semibold text-gray-900 mb-4">Organizer</h3>
-                            <div className="flex items-center gap-3 mb-4">
-                                <img src={campaign?.user_profile?.profile_picture_url} className="w-12 h-12 bg-indigo-50 rounded-full flex-shrink-0 object-cover"
-                                    alt="Organizer Profile">
+                        {/* <!-- Estimation Data Info --> */}
+                        {user?.id === campaign.user.id && estimationData && (
+                            <div className="bg-white p-6 rounded-2xl shadow -md border border-gray-200 space-y-6">
+                                <h3 className="text-xl font-semibold text-gray-900">🎯 Completion Estimation</h3>
 
-                                </img>
-                                <div>
-                                    <div className="font-medium text-gray-900">{campaign.user.full_name}</div>
-                                    <div className="text-sm text-gray-600">Organizer</div>
+                                <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+                                    <div>
+                                        <div className="text-base font-medium text-gray-900">{campaign.user.full_name}</div>
+                                        <div className="text-sm text-gray-500">Organizer</div>
+                                    </div>
+
                                 </div>
+
+
+                                <div className="space-y-4">
+                                    <div className="flex justify-between text-sm text-gray-700">
+                                        <span>📅 Estimated Completion Date:</span>
+                                        <span className="font-semibold text-gray-900">
+                                            {new Date(estimationData.estimated_completion_date).toLocaleDateString()}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex justify-between text-sm text-gray-700">
+                                        <span>⏳ Days Remaining:</span>
+                                        <span className="font-semibold text-gray-900">{estimationData.days_remaining} days</span>
+                                    </div>
+
+                                    <div className="flex justify-between text-sm text-gray-700">
+                                        <span>💸 Average Daily Donation:</span>
+                                        <span className="font-semibold text-gray-900">Rs. {estimationData.average_daily_donation}</span>
+                                    </div>
+
+                                    <div className="flex justify-between text-sm text-gray-700">
+                                        <span>🏁 Remaining Amount:</span>
+                                        <span className="font-semibold text-gray-900">Rs. {estimationData.remaining_amount}</span>
+                                    </div>
+                                </div>
+
                             </div>
-                            <Button
-                                onClick={() => setContactModalOpen(true)}
-                                gradientStart='from-gray-400'
-                                gradientEnd='to-gray-400'
-                            >
-                                Contact
-                            </Button>
-                        </div>
+                        )}
+
 
                     </div>
                 </div>

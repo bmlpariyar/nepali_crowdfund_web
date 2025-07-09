@@ -25,6 +25,7 @@ import AdminRoute from "./components/AdminRoute";
 import AdminLayout from "./components/admin/AdminLayout";
 import AdminDashboard from "./components/admin/AdminDashboard";
 import AdminUserListPage from "./components/admin/AdminUserListPage";
+import TestComponent from "./components/TestComponent";
 
 import LocationHandler from "./components/LocationHandler";
 
@@ -51,6 +52,9 @@ function App() {
           <Route path="/campaigns/:id" element={<CampaignDetailPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/test" element={<TestComponent />} />
+
+
           <Route
             path="/create-campaign"
             element={

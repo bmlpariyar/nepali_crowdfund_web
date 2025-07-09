@@ -50,9 +50,7 @@ const CampaignCard = React.memo(({ campaign, calculatePercentage }) => (
                     </h2>
                 </div>
 
-                <p className="text-slate-600 text-sm mb-6 line-clamp-3 leading-relaxed">
-                    {campaign.story}
-                </p>
+                <p className="text-slate-600 text-sm mb-6 line-clamp-3 leading-relaxed" dangerouslySetInnerHTML={{ __html: campaign.story }}></p>
 
                 <div className="space-y-4">
                     <div className="flex justify-between items-center">

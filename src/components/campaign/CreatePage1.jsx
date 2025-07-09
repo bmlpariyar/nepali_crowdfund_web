@@ -100,6 +100,7 @@ const CreatePage1 = () => {
     navigate("/create/campaign/step2");
   };
 
+
   return (
     <div className="min-h-screen flex bg-white text-gray-800">
       {/* Left Sidebar */}
@@ -142,10 +143,10 @@ const CreatePage1 = () => {
 
               {location && (
                 <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-sm text-green-800">
+                  <div className="text-sm text-green-800">
                     <p className="font-bold text-xl">Selected Location:</p>
                     <p className="text-md italic">{location}</p>
-                  </p>
+                  </div>
                 </div>
               )}
             </div>

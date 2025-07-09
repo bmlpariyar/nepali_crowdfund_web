@@ -3,23 +3,146 @@ import { Link } from "react-router-dom";
 import { useCampaign } from "../../context/CampaignContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { analyzeStory } from "../../services/apiService";
-import { useDebounce } from "../../hooks/useDebounce";
+import RichTextarea from "../ui/RichTextarea";
+import { AIPrompt } from "../utils/AIPrompt";
+
 
 const CreatePage4 = () => {
   const [title, setTitle] = useState("");
   const [story, setStory] = useState("");
   const { campaignData, updateCampaign } = useCampaign();
+  const [isGenerating, setIsGenerating] = React.useState(false);
+  const [error, setError] = React.useState(null);
   const navigate = useNavigate();
+  const handleGenerateStory = async () => {
 
-  const [suggestions, setSuggestions] = useState([]);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const debouncedStory = useDebounce(story, 1500);
+    if (isGenerating) return;
+    setIsGenerating(true);
+    setError(null);
+    setStory('');
+
+
+
+
+
+    const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY || "";
+
+    if (apiKey === "") {
+      setError("Please add your OpenRouter API key to the code.");
+      setIsGenerating(false);
+      return;
+    }
+
+    const promptText = AIPrompt({ title: title || 'Untitled Campaign' });
+
+
+    try {
+      // 3. --- Make the API Call to OpenRouter ---
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json"
+          // Optional headers for OpenRouter ranking
+          // "HTTP-Referer": "http://localhost:3000", 
+          // "X-Title": "My Awesome Crowdfunding App"
+        },
+        body: JSON.stringify({
+          // Using a free, high-quality model available on OpenRouter
+          "model": "mistralai/mistral-7b-instruct:free",
+          "messages": [
+            { "role": "user", "content": promptText }
+          ],
+          // Enable streaming for a real-time effect
+          "stream": true
+        })
+      });
+
+      if (!response.ok) {
+        // Handle API errors (e.g., invalid key, model not available)
+        const errText = await response.text();
+        throw new Error(`API Error: ${response.status} ${response.statusText} - ${errText}`);
+      }
+
+      // 4. --- Process the Streaming Response ---
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let buffer = '';
+      let streamFinished = false;
+
+      while (!streamFinished) {
+        const { done, value } = await reader.read();
+        if (done) {
+          streamFinished = true;
+          break;
+        }
+
+        // Add the new chunk to our buffer
+        buffer += decoder.decode(value, { stream: true });
+
+        // Split the buffer into lines, as a chunk can contain multiple lines
+        const lines = buffer.split("\n");
+
+        // The last line might be incomplete, so we keep it in the buffer for the next chunk
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          // Skip empty lines
+          if (!line) continue;
+
+          // SSE data lines start with "data: "
+          if (line.startsWith('data: ')) {
+            const jsonStr = line.substring(6).trim();
+
+            // The stream sends a '[DONE]' message to signal completion
+            if (jsonStr === '[DONE]') {
+              streamFinished = true;
+              break;
+            }
+
+            // Try to parse the JSON string
+            if (jsonStr) {
+              try {
+                const parsedLine = JSON.parse(jsonStr);
+                const content = parsedLine.choices?.[0]?.delta?.content;
+                if (content) {
+                  // Append the new text chunk to the story
+                  setStory(prevStory => {
+                    const updated = prevStory + content;
+                    updateCampaign({ story: updated }); // <-- sync to context each time it grows
+                    return updated;
+                  });
+                }
+              } catch (err) {
+                // Catching errors if a line is not valid JSON, which can happen with streaming.
+                // We log it but continue processing the stream.
+                console.error('Error parsing JSON line from stream:', jsonStr, err);
+              }
+            }
+          }
+        }
+      }
+
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "An unexpected error occurred.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   useEffect(() => {
-    if (campaignData.title) setTitle(campaignData.title);
-    if (campaignData.story) setStory(campaignData.story);
-  }, [campaignData]);
+    if (campaignData.title) {
+      setTitle(campaignData.title);
+      updateCampaign({ title: campaignData.title });
+    }
+
+    if (campaignData.story) {
+      setStory(campaignData.story);
+      updateCampaign({ story: campaignData.story });
+    }
+  }, [campaignData?.title, campaignData?.story]);
+
 
   const handleNext = () => {
     if (!title || !story) {
@@ -28,39 +151,32 @@ const CreatePage4 = () => {
     }
     navigate("/create/campaign/preview");
   };
+  const handleStoryChange = (value) => {
+    setStory(value);
+    updateCampaign({ story: value });
+  };
 
-  useEffect(() => {
-    if (debouncedStory) { // Only run if there is text
-      setIsAnalyzing(true);
-      analyzeStory(debouncedStory)
-        .then(response => {
-          setSuggestions(response.data.suggestions);
-        })
-        .catch(error => {
-          console.error("AI analysis error:", error);
-        })
-        .finally(() => {
-          setIsAnalyzing(false);
-        });
-    }
-  }, [debouncedStory]);
+
 
   return (
     <div className="min-h-screen flex bg-white text-gray-800">
       {/* Left Sidebar */}
       <div className="w-1/4 bg-gray-100 px-6  flex flex-col justify-center">
-        <div className="pl-8">
-          <h1 className="text-2xl font-semibold mb-3">
-            Tell us about your campaign
+        <div className="max-w-md mx-auto">
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">
+            AI-Powered Campaign Story
           </h1>
-          <span className="text-gray-600 text-sm space-y-1">
-            <ul className="list-disc list-inside space-y-1">
-              <li>What is your campaign about?</li>
-              <li>Why is it important to you?</li>
-              <li>How will the funds be used?</li>
-              <li>What impact do you hope to achieve?</li>
+          <p className="text-gray-600 mb-6">
+            Let our AI assistant help you craft a compelling narrative. Provide a title, then click the magic button to generate a first draft of your campaign story.
+          </p>
+          <div className="space-y-4 text-sm text-gray-600 bg-green-50 p-4 rounded-lg border border-green-200">
+            <h2 className="font-semibold text-green-800">Prompting Tips:</h2>
+            <ul className="list-disc list-inside space-y-2">
+              <li>A descriptive title gives the AI better context.</li>
+              <li>You can edit the generated text at any time.</li>
+              <li>Regenerate as many times as you need!</li>
             </ul>
-          </span>
+          </div>
         </div>
       </div>
 
@@ -90,35 +206,35 @@ const CreatePage4 = () => {
             <label className="block mb-2 text-gray-700 text-lg font-bold">
               Campaign Story
             </label>
-            <textarea
-              placeholder="Tell your story. Why are you raising funds? How will they be used?"
-              className="border border-gray-300 focus:ring-2 focus:ring-green-500 p-3 rounded-lg w-full h-48 text-base resize-none placeholder-gray-500"
+            <RichTextarea
               value={story}
-              onChange={(e) => {
-                const value = e.target.value;
-                setStory(value);
-                updateCampaign({ story: value });
-              }}
+              onChange={handleStoryChange}
+              placeholder="Tell your story. Why are you raising funds? How will they be used?"
             />
-            {isAnalyzing && <span className="absolute bottom-3 right-3 text-sm text-gray-500">Analyzing...</span>}
+
+
           </div>
-          <div className="mt-4 p-4 bg-indigo-50 border border-indigo-200 rounded-lg">
-            <h4 className="font-bold text-indigo-800">Storytelling Assistant</h4>
-            <ul className="mt-2 list-inside">
-              {suggestions.map(suggestion => (
-                <li key={suggestion.id} className="flex items-center text-sm">
-                  {suggestion.complete ? (
-                    <span className="text-green-500 mr-2">✔️</span>
-                  ) : (
-                    <span className="text-yellow-500 mr-2">⚠️</span>
-                  )}
-                  <span className={suggestion.complete ? 'text-gray-600' : 'text-gray-800 font-semibold'}>
-                    {suggestion.text}
-                  </span>
-                </li>
-              ))}
-            </ul>
+          <div className="flex items-center justify-between">
+            <button
+              onClick={handleGenerateStory}
+              disabled={isGenerating}
+              className="px-6 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg"
+            >
+              {isGenerating ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Generating...
+                </>
+              ) : (
+                '✨ Help Me Write'
+              )}
+            </button>
+            {error && <p className="text-red-500 text-sm font-medium">{error}</p>}
           </div>
+
         </div>
 
         {/* Footer Section */}

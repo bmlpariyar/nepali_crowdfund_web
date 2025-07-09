@@ -214,6 +214,10 @@ export const fetchSearchedCampaigns = async (searchParams) => {
   }
 };
 
+export const getEstimationData = (campaignId) => {
+  return apiClient.get(`campaigns/${campaignId}/estimate_completion_date`)
+}
+
 
 // ================CampaignViers==============
 export const logCampaignView = (campaignId) => {
