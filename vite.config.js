@@ -9,8 +9,8 @@ export default defineConfig({
     react()
   ],
   server: {
-    port: 3001,
-    host: 'localhost',
+    port: 8000,
+    host: true,
     // open: true,
   },
 })
