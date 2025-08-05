@@ -33,7 +33,7 @@ const CreatePage4 = () => {
       return;
     }
 
-    const promptText = AIPrompt({ title: title || 'Untitled Campaign' });
+    const promptText = AIPrompt({ title: title || 'Untitled Campaign', amount: campaignData.funding_goal || '0', deadline: campaignData.deadline || 'No Deadline', location: `latitude:${campaignData.latitude}, longitude${campaignData.longitude}` });
 
 
     try {

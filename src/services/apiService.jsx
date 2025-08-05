@@ -273,10 +273,25 @@ export const fetchChatMessages = (campaignId) => {
 
 }
 
-export const postChatMessage = (campaignId, message) => {
-  return apiClient.post(`/api/v1/campaigns/${campaignId}/chat_messages`, { chat_message: message });
+export const postChatMessage = (campaignId, message, donor_id) => {
+  return apiClient.post(`/api/v1/campaigns/${campaignId}/chat_messages`, { chat_message: message, donor_id: donor_id });
 };
 
 export const markMessagesAsRead = (campaignId) => {
   return apiClient.post(`/api/v1/campaigns/${campaignId}/chat_messages/mark_as_read`);
+};
+
+
+
+//==============khalti payment ================
+export const initiateKhaltiPayment = async (paymentData) => {
+  try {
+    const response = await apiClient.post('/payments/khalti', {
+      payment: paymentData
+    });
+    return response;
+  } catch (error) {
+    console.error('Khalti payment initiation failed:', error);
+    throw error;
+  }
 };

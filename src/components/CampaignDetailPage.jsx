@@ -457,7 +457,9 @@ function CampaignDetailPage() {
                 <ChatWidget
                     campaignId={campaign.id}
                     currentUser={user}
-                    isCreator={campaign?.user?.id === user?.id} />
+                    isCreator={campaign?.user?.id === user?.id}
+                    recepient_id={campaign?.user?.id !== user?.id ? campaign?.user?.id : null}
+                />
             )}
         </div>
     );

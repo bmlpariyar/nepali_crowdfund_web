@@ -3,13 +3,19 @@ import { MessageCircle, X, Send, User, Clock } from 'lucide-react';
 import { fetchChatMessages, postChatMessage, markMessagesAsRead } from '../../services/apiService';
 import { formatDistanceToNowStrict } from 'date-fns';
 
-const ChatWidget = ({ campaignId, currentUser, isCreator = false }) => {
+const ChatWidget = ({
+    campaignId,
+    currentUser,
+    isCreator = false
+}) => {
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState([]);
+    const [conversations, setConversations] = useState([]);
+    const [selectedConversation, setSelectedConversation] = useState(null);
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(false);
     const [sending, setSending] = useState(false);
-    const [unreadCount, setUnreadCount] = useState(0);
+    const [totalUnreadCount, setTotalUnreadCount] = useState(0);
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
 
@@ -18,20 +24,69 @@ const ChatWidget = ({ campaignId, currentUser, isCreator = false }) => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
-    // Load chat messages
+    // Load chat messages and organize by conversations
     const loadMessages = async () => {
         if (!campaignId) return;
 
         setLoading(true);
         try {
             const response = await fetchChatMessages(campaignId);
-            setMessages(response.data.chat_messages);
-            // Count unread messages
-            const currentUserType = isCreator ? 'creator' : 'donor';
-            const unread = response.data.chat_messages.filter(msg =>
-                !msg.read && msg.sender_type !== currentUserType
-            ).length;
-            setUnreadCount(unread);
+            const allMessages = response.data.data;
+            setMessages(allMessages);
+
+            if (isCreator) {
+                // Group messages by conversation for creators
+                const conversationMap = new Map();
+                const currentUserType = 'creator';
+
+                allMessages.forEach(msg => {
+                    const convId = msg.conversation_id;
+                    if (!conversationMap.has(convId)) {
+                        conversationMap.set(convId, {
+                            id: convId,
+                            participantName: msg.sender_type === 'donor' ? msg.sender_name :
+                                allMessages.find(m => m.conversation_id === convId && m.sender_type === 'donor')?.sender_name || 'Unknown',
+                            lastMessage: msg,
+                            unreadCount: 0,
+                            messages: []
+                        });
+                    }
+
+                    const conversation = conversationMap.get(convId);
+                    conversation.messages.push(msg);
+
+                    // Update last message if this one is newer
+                    if (new Date(msg.created_at) > new Date(conversation.lastMessage.created_at)) {
+                        conversation.lastMessage = msg;
+                    }
+
+                    // Count unread messages from donors
+                    if (!msg.read && msg.sender_type !== currentUserType) {
+                        conversation.unreadCount++;
+                    }
+                });
+
+                // Convert to array and sort by last message time
+                const conversationArray = Array.from(conversationMap.values())
+                    .sort((a, b) => new Date(b.lastMessage.created_at) - new Date(a.lastMessage.created_at));
+
+                setConversations(conversationArray);
+
+                // Calculate total unread count
+                const totalUnread = conversationArray.reduce((sum, conv) => sum + conv.unreadCount, 0);
+                setTotalUnreadCount(totalUnread);
+
+                // Auto-select first conversation if none selected
+                if (!selectedConversation && conversationArray.length > 0) {
+                    setSelectedConversation(conversationArray[0]);
+                }
+            } else {
+                // For donors, count unread messages from creator
+                const unread = allMessages.filter(msg =>
+                    !msg.read && msg.sender_type === 'creator'
+                ).length;
+                setTotalUnreadCount(unread);
+            }
 
         } catch (error) {
             console.error('Error loading messages:', error);
@@ -40,23 +95,51 @@ const ChatWidget = ({ campaignId, currentUser, isCreator = false }) => {
         }
     };
 
+    // Get messages for selected conversation
+    const getConversationMessages = () => {
+        if (!isCreator) {
+            return messages; // Donors see all messages
+        }
+
+        if (!selectedConversation) {
+            return [];
+        }
+
+        return messages.filter(msg => msg.conversation_id === selectedConversation.id);
+    };
 
     // Send new message
     const handleSendMessage = async (e) => {
         e.preventDefault();
         if (!newMessage.trim() || sending) return;
 
+        if (isCreator && !selectedConversation) {
+            console.error('Creator must select a conversation');
+            return;
+        }
+
         setSending(true);
         try {
-            const response = await postChatMessage(campaignId, { message: newMessage.trim() });
+            const messageData = { message: newMessage.trim() };
+            const recipientId = isCreator ? selectedConversation.messages[0].doner_id : null;
+            debugger
+            const response = await postChatMessage(
+                campaignId,
+                messageData,
+                recipientId
+            );
 
-            // Add new message to the list
             setMessages(prev => [...prev, response.data.data]);
             setNewMessage('');
 
-            // Focus back on input
-            setTimeout(() => inputRef.current?.focus(), 100);
+            if (isCreator && selectedConversation) {
+                setSelectedConversation(prev => ({
+                    ...prev,
+                    lastMessage: response.data.data
+                }));
+            }
 
+            setTimeout(() => inputRef.current?.focus(), 100);
         } catch (error) {
             console.error('Error sending message:', error);
         } finally {
@@ -64,17 +147,63 @@ const ChatWidget = ({ campaignId, currentUser, isCreator = false }) => {
         }
     };
 
-    // Mark messages as read when chat opens
+
+    // Mark messages as read when chat opens or conversation changes
+    const markConversationAsRead = async (conversationId = null) => {
+        try {
+            await markMessagesAsRead(campaignId, conversationId);
+
+            if (isCreator && selectedConversation) {
+                // Update conversation unread count
+                setConversations(prev => prev.map(conv =>
+                    conv.id === selectedConversation.id
+                        ? { ...conv, unreadCount: 0 }
+                        : conv
+                ));
+
+                // Update messages as read
+                setMessages(prev => prev.map(msg =>
+                    msg.conversation_id === selectedConversation.id
+                        ? { ...msg, read: true, read_at: new Date().toISOString() }
+                        : msg
+                ));
+            } else {
+                // For donors, mark all messages as read
+                setMessages(prev => prev.map(msg => ({
+                    ...msg,
+                    read: true,
+                    read_at: new Date().toISOString()
+                })));
+            }
+
+            // Recalculate total unread count
+            if (isCreator) {
+                const newTotalUnread = conversations.reduce((sum, conv) =>
+                    conv.id === selectedConversation?.id ? sum : sum + conv.unreadCount, 0
+                );
+                setTotalUnreadCount(newTotalUnread);
+            } else {
+                setTotalUnreadCount(0);
+            }
+
+        } catch (error) {
+            console.error('Error marking messages as read:', error);
+        }
+    };
+
+    // Handle chat open
     const handleChatOpen = async () => {
         setIsOpen(true);
-        if (unreadCount > 0) {
-            try {
-                await markMessagesAsRead(campaignId);
-                setUnreadCount(0);
-                setMessages(prev => prev.map(msg => ({ ...msg, read: true })));
-            } catch (error) {
-                console.error('Error marking messages as read:', error);
-            }
+        if (totalUnreadCount > 0) {
+            await markConversationAsRead();
+        }
+    };
+
+    // Handle conversation selection
+    const handleConversationSelect = (conversation) => {
+        setSelectedConversation(conversation);
+        if (conversation.unreadCount > 0) {
+            markConversationAsRead(conversation.id);
         }
     };
 
@@ -86,7 +215,7 @@ const ChatWidget = ({ campaignId, currentUser, isCreator = false }) => {
     // Scroll to bottom when messages change
     useEffect(() => {
         scrollToBottom();
-    }, [messages]);
+    }, [messages, selectedConversation]);
 
     // Focus input when chat opens
     useEffect(() => {
@@ -95,7 +224,8 @@ const ChatWidget = ({ campaignId, currentUser, isCreator = false }) => {
         }
     }, [isOpen]);
 
-    // Format timestamp
+    // Get current conversation messages
+    const currentMessages = getConversationMessages();
 
     return (
         <div className="fixed bottom-4 right-4 z-50">
@@ -121,29 +251,75 @@ const ChatWidget = ({ campaignId, currentUser, isCreator = false }) => {
                         </button>
                     </div>
 
+                    {/* Conversation Bubbles (Creator Only) */}
+                    {isCreator && conversations.length > 0 && (
+                        <div className="p-3 border-b border-gray-200 bg-gray-50">
+                            <div className="flex gap-2 overflow-x-auto pb-2">
+                                {conversations.map((conversation) => (
+                                    <button
+                                        key={conversation.id}
+                                        onClick={() => handleConversationSelect(conversation)}
+                                        className={`relative flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-full text-sm transition-colors ${selectedConversation?.id === conversation.id
+                                            ? 'bg-blue-600 text-white'
+                                            : 'bg-white text-gray-700 hover:bg-gray-100'
+                                            }`}
+                                    >
+                                        <User size={16} />
+                                        <span className="max-w-20 truncate">
+                                            {conversation.participantName}
+                                        </span>
+
+                                        {/* Unread Badge */}
+                                        {conversation.unreadCount > 0 && (
+                                            <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                                                {conversation.unreadCount > 9 ? '9+' : conversation.unreadCount}
+                                            </div>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Messages */}
                     <div className="flex-1 overflow-y-auto p-4 space-y-3">
                         {loading ? (
                             <div className="flex items-center justify-center h-full">
                                 <div className="text-gray-500">Loading messages...</div>
                             </div>
-                        ) : messages.length === 0 ? (
+                        ) : currentMessages.length === 0 ? (
                             <div className="flex items-center justify-center h-full text-center">
                                 <div className="text-gray-500">
                                     <MessageCircle size={48} className="mx-auto mb-2 text-gray-300" />
-                                    <p>No messages yet.</p>
-                                    <p className="text-sm">Start a conversation!</p>
+                                    {isCreator ? (
+                                        conversations.length === 0 ? (
+                                            <>
+                                                <p>No conversations yet.</p>
+                                                <p className="text-sm">Supporters will appear here when they message you.</p>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <p>No messages in this conversation.</p>
+                                                <p className="text-sm">Start chatting with this supporter!</p>
+                                            </>
+                                        )
+                                    ) : (
+                                        <>
+                                            <p>No messages yet.</p>
+                                            <p className="text-sm">Start a conversation!</p>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         ) : (
-                            messages.map((message) => {
+                            currentMessages.map((message) => {
                                 const currentUserType = isCreator ? 'creator' : 'donor';
                                 const isCurrentUser = message.sender_type === currentUserType;
 
                                 return (
                                     <div
                                         key={message.id}
-                                        className={`flex ${isCurrentUser ? 'justify-start' : 'justify-end'}`}
+                                        className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
                                     >
                                         <div
                                             className={`max-w-[70%] rounded-lg px-3 py-2 ${isCurrentUser
@@ -155,8 +331,12 @@ const ChatWidget = ({ campaignId, currentUser, isCreator = false }) => {
                                             <div className={`flex items-center gap-1 mt-1 text-xs ${isCurrentUser ? 'text-blue-100' : 'text-gray-500'
                                                 }`}>
                                                 <Clock size={12} />
-                                                <span>{formatDistanceToNowStrict(new Date(message.created_at), { addSuffix: true })}
+                                                <span>
+                                                    {formatDistanceToNowStrict(new Date(message.created_at), { addSuffix: true })}
                                                 </span>
+                                                {isCurrentUser && message.read && (
+                                                    <span className="ml-1">✓</span>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -168,29 +348,38 @@ const ChatWidget = ({ campaignId, currentUser, isCreator = false }) => {
 
                     {/* Input */}
                     <div className="border-t border-gray-200 p-4">
-                        <div className="flex gap-2">
-                            <input
-                                ref={inputRef}
-                                type="text"
-                                value={newMessage}
-                                onChange={(e) => setNewMessage(e.target.value)}
-                                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage(e)}
-                                placeholder="Type your message..."
-                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                                disabled={sending}
-                            />
-                            <button
-                                onClick={handleSendMessage}
-                                disabled={!newMessage.trim() || sending}
-                                className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-                            >
-                                {sending ? (
-                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                ) : (
-                                    <Send size={16} />
-                                )}
-                            </button>
-                        </div>
+                        {isCreator && !selectedConversation ? (
+                            <div className="text-center text-gray-500 text-sm py-2">
+                                Select a conversation to start messaging
+                            </div>
+                        ) : (
+                            <form onSubmit={handleSendMessage} className="flex gap-2">
+                                <input
+                                    ref={inputRef}
+                                    type="text"
+                                    value={newMessage}
+                                    onChange={(e) => setNewMessage(e.target.value)}
+                                    placeholder={
+                                        isCreator && selectedConversation
+                                            ? `Message ${selectedConversation.participantName}...`
+                                            : "Type your message..."
+                                    }
+                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                    disabled={sending}
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={!newMessage.trim() || sending}
+                                    className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    {sending ? (
+                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                    ) : (
+                                        <Send size={16} />
+                                    )}
+                                </button>
+                            </form>
+                        )}
                     </div>
                 </div>
             )}
@@ -203,9 +392,9 @@ const ChatWidget = ({ campaignId, currentUser, isCreator = false }) => {
                 <MessageCircle size={24} />
 
                 {/* Unread Badge */}
-                {unreadCount > 0 && (
+                {totalUnreadCount > 0 && (
                     <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-bold animate-pulse">
-                        {unreadCount > 9 ? '9+' : unreadCount}
+                        {totalUnreadCount > 9 ? '9+' : totalUnreadCount}
                     </div>
                 )}
             </button>
