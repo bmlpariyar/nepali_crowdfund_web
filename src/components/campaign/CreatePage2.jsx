@@ -3,17 +3,42 @@ import { Link } from "react-router-dom";
 import { useCampaign } from "../../context/CampaignContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import AlertModal from "../modals/AlertModal";
+
 
 const CreatePage2 = () => {
   const [fundingGoal, setFundingGoal] = useState("");
   const [deadline, setDeadline] = useState("");
   const { campaignData, updateCampaign } = useCampaign();
+  const [showAlertModal, setShowAlertModal] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+
   const navigate = useNavigate();
 
   useEffect(() => {
     if (campaignData.deadline) setDeadline(campaignData.deadline);
     if (campaignData.funding_goal) setFundingGoal(campaignData.funding_goal);
   }, [campaignData]);
+
+  const handleDeadlineChange = (e) => {
+    const value = e.target.value;
+    const selectedDate = new Date(value);
+    const today = new Date();
+
+    selectedDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+
+    if (selectedDate < today) {
+      setAlertMessage("Please select a valid future date.");
+      setShowAlertModal(true);
+      return;
+    }
+
+    setDeadline(value);
+    updateCampaign({ deadline: value });
+  };
+
+
 
   const handleNext = () => {
     if (!fundingGoal || !deadline) {
@@ -67,11 +92,7 @@ const CreatePage2 = () => {
             placeholder=""
             className="border border-gray-300 focus:ring-2 focus:ring-green-500 p-3 rounded-lg w-full mb-6 text-lg"
             value={deadline}
-            onChange={(e) => {
-              const value = e.target.value;
-              setDeadline(value);
-              updateCampaign({ deadline: value });
-            }}
+            onChange={handleDeadlineChange}
             min="1"
           />
 
@@ -109,6 +130,15 @@ const CreatePage2 = () => {
             </button>
           </div>
         </div>
+
+        <AlertModal
+          show={showAlertModal}
+          title="Invalid Deadline"
+          message={alertMessage}
+          onConfirm={() => setShowAlertModal(false)}
+          onCancel={() => setShowAlertModal(false)}
+        />
+
       </div>
     </div>
   );

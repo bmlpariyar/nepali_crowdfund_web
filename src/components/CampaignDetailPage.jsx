@@ -385,6 +385,11 @@ function CampaignDetailPage() {
 
                                 </div>
 
+                                <div>
+                                    {estimationData.message && (
+                                        <p className='text-red-400'>{estimationData.message}</p>
+                                    )}
+                                </div>
 
                                 <div className="space-y-4">
                                     <div className="flex justify-between text-sm text-gray-700">
