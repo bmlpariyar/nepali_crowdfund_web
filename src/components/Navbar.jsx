@@ -11,16 +11,14 @@ function Navbar() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
 
-
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     const queryParams = new URLSearchParams();
     if (searchQuery) {
-      queryParams.append("name", searchQuery)
+      queryParams.append("name", searchQuery);
       navigate(`/search?${queryParams.toString()}`, { replace: true });
       setSearchQuery("");
     }
-
   };
 
   if (auth?.isLoading) {
@@ -33,8 +31,10 @@ function Navbar() {
 
   const { user, logout } = auth || {};
 
-  const activeClass = "text-gray-600 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full border border-white/30 shadow-lg";
-  const inactiveClass = "text-gray-600/90 hover:text-white hover:bg-gray-600/10 px-4 py-2 rounded-full transition-all duration-300 ease-out hover:backdrop-blur-sm";
+  const activeClass =
+    "text-gray-600 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full border border-white/30 shadow-lg";
+  const inactiveClass =
+    "text-gray-600/90 hover:text-white hover:bg-gray-600/10 px-4 py-2 rounded-full transition-all duration-300 ease-out hover:backdrop-blur-sm";
 
   const navLinks = (
     <>
@@ -81,7 +81,10 @@ function Navbar() {
             </div>
           </div>
 
-          <form onSubmit={handleSearchSubmit} className="hidden md:flex w-full max-w-md mx-auto">
+          <form
+            onSubmit={handleSearchSubmit}
+            className="hidden md:flex w-full max-w-md mx-auto"
+          >
             <input
               type="text"
               placeholder="Search campaigns..."
@@ -111,13 +114,13 @@ function Navbar() {
                       alt="User Avatar"
                     />
                     <span className="text-gray-600 text-sm font-medium">
-                      {user.full_name?.split(' ')[0] || 'User'}
+                      {user.full_name?.split(" ")[0] || "User"}
                     </span>
                   </div>
                 </button>
 
                 {menuOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white/10 backdrop-blur-md rounded-xl border border-white/20 shadow-2xl py-2 z-50">
+                  <div className="absolute right-0 mt-2 w-56 bg-white/80 backdrop-blur-md rounded-xl border border-white/20 shadow-2xl py-2 z-50">
                     <Link
                       to="/profile"
                       className="block px-4 py-3 text-gray-600 hover:bg-gray-600/40 transition-all duration-200 text-sm font-medium"
@@ -143,7 +146,9 @@ function Navbar() {
                 <NavLink
                   to="/login"
                   className={({ isActive }) =>
-                    `${isActive ? activeClass : inactiveClass} text-sm font-medium`
+                    `${
+                      isActive ? activeClass : inactiveClass
+                    } text-sm font-medium`
                   }
                 >
                   Login
@@ -166,7 +171,11 @@ function Navbar() {
               onClick={() => setMenuOpen(!menuOpen)}
               className="text-white/90 hover:text-white focus:outline-none p-2 rounded-full hover:bg-white/10 transition-all duration-300"
             >
-              {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {menuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
             </button>
           </div>
         </div>
